@@ -1,0 +1,21 @@
+[project]
+name = "from-campus-to-career-data-pipeline"
+version = "0.1.0"
+description = "Data pipeline for From Campus to Career"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "polars>=1.33.1",
+  "pydantic>=2.12.3",
+  "pydantic-settings>=2.11.0",
+  "sqlalchemy>=2.0.44"
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.4.2"
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

@@ -1,1 +1,14 @@
 .env
+AGENTS.md*
+node_modules/
+.pnpm-store/
+.turbo/
+dist/
+.next/
+coverage/
+*.tsbuildinfo
+
+# Python
+.venv/
+__pycache__/
+.pytest_cache/

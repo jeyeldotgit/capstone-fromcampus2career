@@ -1,0 +1,17 @@
+{
+  "name": "from-campus-to-career",
+  "private": true,
+  "packageManager": "pnpm@10.33.2",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "dev:api": "pnpm --filter @fcc/api dev",
+    "dev:admin": "pnpm --filter @fcc/admin dev",
+    "dev:pipeline": "pnpm --filter @fcc/data-pipeline dev"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.8"
+  }
+}
