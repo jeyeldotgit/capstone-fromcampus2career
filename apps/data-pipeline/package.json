@@ -1,0 +1,11 @@
+{
+  "name": "@fcc/data-pipeline",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "uv run python -m src.main",
+    "build": "echo \"Python project - no build step\"",
+    "test": "uv run pytest",
+    "lint": "echo \"No lint yet\""
+  }
+}
