@@ -32,10 +32,15 @@ psql --version
 From Supabase Dashboard for a single target project:
 
 1. `SUPABASE_URL`:
+
 - Project Settings -> API -> Project URL
+
 2. `SUPABASE_SERVICE_ROLE_KEY`:
+
 - Project Settings -> API -> `service_role` key (server-side only)
+
 3. `DATABASE_URL`:
+
 - Project -> Connect -> Postgres connection string
 - Use a single connection mode consistently for both runtimes.
 
@@ -207,6 +212,7 @@ Before applying any migration to live/shared DB:
 2. Confirm target environment and project ref with another engineer.
 3. Run with `ON_ERROR_STOP=1` and `--single-transaction` where compatible.
 4. If migration fails:
+
 - Stop immediately.
 - Do not patch data manually in production.
 - Restore from backup if needed, or ship a corrective migration in version control.
