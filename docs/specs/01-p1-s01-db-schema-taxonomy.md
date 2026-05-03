@@ -6,13 +6,15 @@
 **Responsibility**  
 Define the Phase 1 foundational taxonomy and dataset schema in Supabase Postgres so all downstream pipeline and read-layer work has stable relational contracts.
 
-**Depends on**  
-None.
+**Depends on**
+
+- `P1-S00-db-environment-bootstrap`
 
 **Inputs**
 
 - [dev-roadmap.md](/c:/Users/BEBELABS/Documents/FromCampus2Career/docs/dev-roadmap.md)
 - [LLD.md](/c:/Users/BEBELABS/Documents/FromCampus2Career/docs/LLD.md)
+- [00-p1-s00-db-environment-bootstrap.md](/c:/Users/BEBELABS/Documents/FromCampus2Career/docs/specs/00-p1-s00-db-environment-bootstrap.md)
 
 **Files/artifacts produced**
 
