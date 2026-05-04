@@ -44,6 +44,6 @@ Implement Python pipeline orchestration that creates and manages ingestion job l
 **Exit criterion (verifiable done condition)**
 
 1. A pipeline run creates a `pipeline_jobs` record and marks it `running`.
-2. Successful completion marks job `succeeded` with finished timestamp and counters.
+2. Successful completion marks job `complete` with finished timestamp and counters.
 3. Simulated failure marks job `failed` and writes an error message.
 4. Tests cover at least one success and one failure lifecycle path.
