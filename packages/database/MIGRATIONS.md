@@ -259,3 +259,25 @@ Before applying any migration to live/shared DB:
   - rejected rows are unique per `pipeline_job_id + row_number`
 - Safe apply rule:
   - apply only after P1-S01 tables already exist because `pipeline_jobs.dataset_id` references `market_datasets(id)`
+
+## P1-S03 Prepared Intelligence Migration Note
+
+- Migration file: `packages/database/migrations/20260504110000_p1_s03_prepared_intelligence.sql`
+- Depends on: `20260503143000_p1_s01_taxonomy_schema.sql`
+- Adds:
+  - `role_requirement_versions` for immutable published requirement-version headers linked to `market_datasets`
+  - `role_skill_requirements` for per-role, per-skill published requirement rows keyed by integer `requirement_version`
+  - `sdi_snapshots` for per-role, per-skill SDI snapshots keyed by `snapshot_date`
+  - `skill_decay_signals` for per-role, per-skill decay metadata with `is_active` state
+- Key integrity rules:
+  - `role_requirement_versions.version` is unique and must be greater than `0`
+  - `role_skill_requirements` is unique per `role_id + skill_id + requirement_version`
+  - `sdi_snapshots` is unique per `role_id + skill_id + snapshot_date`
+  - `skill_decay_signals` is unique per `role_id + skill_id + requirement_version`
+  - numeric publish checks enforce `required_depth`, `demand_weight`, `demand_index`, `decay_rate`, and `confidence` ranges
+  - `role_skill_requirements.evidence_count` keeps the LLD default of `0`, but published rows must satisfy `evidence_count >= 5`
+- Versioning note:
+  - child-table `requirement_version` columns are stored as plain integers with no FK to `role_requirement_versions(version)` to match the current LLD contract
+  - `role_requirement_versions` intentionally omits `is_current`; latest-version reads should use `ORDER BY version DESC LIMIT 1`
+- Safe apply rule:
+  - apply only after P1-S01 tables already exist because the prepared-intelligence tables reference `market_datasets`, `career_roles`, and `skills`
