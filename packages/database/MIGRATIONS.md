@@ -237,3 +237,18 @@ Before applying any migration to live/shared DB:
 - [ ] API and pipeline confirm same database target.
 - [ ] Migration command path validated with local/fresh vs live distinction documented.
 - [ ] Rollback safety notes reviewed before live execution.
+
+## P1-S02 Pipeline Ops Migration Note
+
+- Migration file: `packages/database/migrations/20260504100000_p1_s02_pipeline_ops.sql`
+- Depends on: `20260503143000_p1_s01_taxonomy_schema.sql`
+- Adds:
+  - `pipeline_jobs` for ingestion job lifecycle state, counters, output version, and error summaries
+  - `pipeline_rejected_rows` for row-level rejection diagnostics linked to a parent pipeline job
+- Key integrity rules:
+  - `pipeline_jobs.status` is constrained to `pending`, `running`, `complete`, `failed`, or `partial`
+  - `pipeline_jobs.started_at`, `status`, and `created_at` are non-null
+  - `pipeline_rejected_rows.pipeline_job_id` is required and FK-enforced
+  - rejected rows are unique per `pipeline_job_id + row_number`
+- Safe apply rule:
+  - apply only after P1-S01 tables already exist because `pipeline_jobs.dataset_id` references `market_datasets(id)`

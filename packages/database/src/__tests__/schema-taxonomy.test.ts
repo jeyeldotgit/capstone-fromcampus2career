@@ -5,8 +5,23 @@ import { before, describe, test } from "node:test";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const PSQL_PATH = "psql";
-const PSQL_AVAILABLE = spawnSync(PSQL_PATH, ["--version"], { encoding: "utf8" }).status === 0;
-const CAN_RUN = Boolean(DATABASE_URL) && PSQL_AVAILABLE;
+const DOCKER_PATH = "docker";
+const PSQL_AVAILABLE = (() => {
+  try {
+    return spawnSync(PSQL_PATH, ["--version"], { encoding: "utf8" }).status === 0;
+  } catch {
+    return false;
+  }
+})();
+const DOCKER_AVAILABLE = (() => {
+  try {
+    return spawnSync(DOCKER_PATH, ["--version"], { encoding: "utf8" }).status === 0;
+  } catch {
+    return false;
+  }
+})();
+const USE_DOCKER_PSQL = !PSQL_AVAILABLE && DOCKER_AVAILABLE;
+const CAN_RUN = Boolean(DATABASE_URL) && (PSQL_AVAILABLE || USE_DOCKER_PSQL);
 
 const REQUIRED_TABLES = [
   "skills",
@@ -73,6 +88,27 @@ const MIGRATION_SQL = readFileSync(
 
 function runSql(sqlText: string): string {
   assert.ok(DATABASE_URL, "DATABASE_URL must be provided to run taxonomy schema tests");
+  if (USE_DOCKER_PSQL) {
+    return execFileSync(
+      DOCKER_PATH,
+      [
+        "run",
+        "--rm",
+        "postgres:16-alpine",
+        "psql",
+        DATABASE_URL,
+        "--set",
+        "ON_ERROR_STOP=1",
+        "--tuples-only",
+        "--no-align",
+        "--quiet",
+        "--command",
+        sqlText,
+      ],
+      { encoding: "utf8" },
+    ).trim();
+  }
+
   return execFileSync(
     PSQL_PATH,
     [DATABASE_URL, "--set", "ON_ERROR_STOP=1", "--tuples-only", "--no-align", "--quiet", "--command", sqlText],
@@ -82,11 +118,30 @@ function runSql(sqlText: string): string {
 
 function runSqlExpectFailure(sqlText: string): { status: number | null; stderr: string; stdout: string } {
   assert.ok(DATABASE_URL, "DATABASE_URL must be provided to run taxonomy schema tests");
-  const result = spawnSync(
-    PSQL_PATH,
-    [DATABASE_URL, "--set", "ON_ERROR_STOP=1", "--tuples-only", "--no-align", "--quiet", "--command", sqlText],
-    { encoding: "utf8" },
-  );
+  const result = USE_DOCKER_PSQL
+    ? spawnSync(
+        DOCKER_PATH,
+        [
+          "run",
+          "--rm",
+          "postgres:16-alpine",
+          "psql",
+          DATABASE_URL,
+          "--set",
+          "ON_ERROR_STOP=1",
+          "--tuples-only",
+          "--no-align",
+          "--quiet",
+          "--command",
+          sqlText,
+        ],
+        { encoding: "utf8" },
+      )
+    : spawnSync(
+        PSQL_PATH,
+        [DATABASE_URL, "--set", "ON_ERROR_STOP=1", "--tuples-only", "--no-align", "--quiet", "--command", sqlText],
+        { encoding: "utf8" },
+      );
 
   return {
     status: result.status,
@@ -97,7 +152,7 @@ function runSqlExpectFailure(sqlText: string): { status: number | null; stderr: 
 
 describe(
   "P1-S01 taxonomy schema migration",
-  { skip: CAN_RUN ? false : "requires DATABASE_URL and psql installed" },
+  { skip: CAN_RUN ? false : "requires DATABASE_URL and either local psql or Docker" },
   () => {
     before(() => {
       runSql(MIGRATION_SQL);
