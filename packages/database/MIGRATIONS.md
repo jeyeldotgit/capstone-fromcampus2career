@@ -4,6 +4,13 @@ Spec: `P1-S00-db-environment-bootstrap`
 
 This runbook provisions (or selects) a live Supabase database target, wires runtime environment variables for both TypeScript and Python, verifies both runtimes point to the same database, and documents safe migration execution.
 
+## Migration Authoring and Apply Model
+
+- Database schema source lives in Drizzle ORM table definitions under `packages/database/src/schema`.
+- Migration SQL files are generated from schema changes using Drizzle Kit.
+- Generated SQL files in `packages/database/migrations` are the deploy artifact and must be committed.
+- Shared/live environments apply committed SQL files via `psql` with forward-only migration discipline.
+
 ## Scope Guardrails
 
 - This spec does not introduce new schema or seed data.
