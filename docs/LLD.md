@@ -747,6 +747,7 @@ skill_aliases
 - id uuid primary key
 - skill_id uuid references skills(id)
 - alias text unique not null
+- normalized_alias text not null
 - source text
 - reviewed boolean default false
 - created_at timestamptz not null
@@ -1222,6 +1223,13 @@ Normalization rules:
 - remove repeated spaces
 - normalize common punctuation
 - optionally map common Filipino/English phrases
+
+Persisted alias normalization contract:
+
+- `skill_aliases.normalized_alias` and `career_role_aliases.normalized_alias` use a narrower canonicalization rule than free-text search queries.
+- The persisted alias key is `lower(regexp_replace(btrim(alias), '[[:space:]]+', ' ', 'g'))`.
+- This rule trims leading/trailing whitespace, collapses repeated internal whitespace, and lowercases text.
+- Punctuation stripping and phrase mapping may be used for query matching, but they must not redefine the stored `normalized_alias` contract unless the schema and constraints are updated together.
 
 Confidence scoring:
 
