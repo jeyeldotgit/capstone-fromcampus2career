@@ -466,8 +466,10 @@ student_courses
 ```txt
 skills
 - id uuid primary key
+- code text unique not null
 - name text unique not null
 - category text
+- notes text
 - is_active boolean default true
 - created_at timestamptz not null
 ```
@@ -475,9 +477,11 @@ skills
 ```txt
 skill_aliases
 - id uuid primary key
+- code text unique not null
 - skill_id uuid references skills(id)
 - alias text unique not null
 - source text
+- notes text
 - reviewed boolean default false
 - created_at timestamptz not null
 ```
@@ -496,8 +500,10 @@ course_skills
 ```txt
 career_roles
 - id uuid primary key
+- code text unique not null
 - title text unique not null
 - description text
+- category text
 - is_active boolean default true
 - created_at timestamptz not null
 ```
@@ -505,6 +511,7 @@ career_roles
 ```txt
 career_role_aliases
 - id uuid primary key
+- code text unique not null
 - role_id uuid not null references career_roles(id)
 - alias text unique not null
 - normalized_alias text not null

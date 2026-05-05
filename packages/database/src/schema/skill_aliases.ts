@@ -15,14 +15,17 @@ export const skillAliases = pgTable(
   "skill_aliases",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    code: text("code").notNull(),
     skillId: uuid("skill_id").references(() => skills.id),
     alias: text("alias").notNull(),
     normalizedAlias: text("normalized_alias").notNull(),
     source: text("source"),
+    notes: text("notes"),
     reviewed: boolean("reviewed").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
+    uniqueIndex("skill_aliases_code_unique").on(table.code),
     uniqueIndex("skill_aliases_alias_unique").on(table.alias),
     uniqueIndex("skill_aliases_normalized_alias_unique").on(table.normalizedAlias),
     index("skill_aliases_skill_id_idx").on(table.skillId),
