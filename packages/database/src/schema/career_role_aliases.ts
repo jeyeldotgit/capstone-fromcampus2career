@@ -14,6 +14,7 @@ export const careerRoleAliases = pgTable(
   "career_role_aliases",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    code: text("code").notNull(),
     roleId: uuid("role_id")
       .notNull()
       .references(() => careerRoles.id),
@@ -22,6 +23,7 @@ export const careerRoleAliases = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
+    uniqueIndex("career_role_aliases_code_unique").on(table.code),
     uniqueIndex("career_role_aliases_alias_unique").on(table.alias),
     uniqueIndex("career_role_aliases_normalized_alias_unique").on(table.normalizedAlias),
     index("career_role_aliases_role_id_idx").on(table.roleId),

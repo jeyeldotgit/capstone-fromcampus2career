@@ -43,6 +43,52 @@ Define the Phase 1 foundational taxonomy and dataset schema in Supabase Postgres
 - Use explicit PK/FK/unique/check constraints for contract-critical integrity
 - Keep naming and required columns aligned with Phase 1 vocabulary in `LLD.md`
 
+**Column listings**
+
+```txt
+skills
+- id uuid primary key
+- code text unique not null
+- name text unique not null
+- category text
+- notes text
+- is_active boolean default true
+- created_at timestamptz not null
+```
+
+```txt
+skill_aliases
+- id uuid primary key
+- code text unique not null
+- skill_id uuid references skills(id)
+- alias text unique not null
+- source text
+- notes text
+- reviewed boolean default false
+- created_at timestamptz not null
+```
+
+```txt
+career_roles
+- id uuid primary key
+- code text unique not null
+- title text unique not null
+- description text
+- category text
+- is_active boolean default true
+- created_at timestamptz not null
+```
+
+```txt
+career_role_aliases
+- id uuid primary key
+- code text unique not null
+- role_id uuid not null references career_roles(id)
+- alias text unique not null
+- normalized_alias text not null
+- created_at timestamptz not null
+```
+
 **Exit criterion (verifiable done condition)**
 
 1. Database migration applies cleanly on a fresh database.
