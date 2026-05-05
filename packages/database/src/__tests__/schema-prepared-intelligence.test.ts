@@ -6,6 +6,12 @@ import { beforeAll, describe, expect, test } from "vitest";
 const DATABASE_URL = process.env.DATABASE_URL;
 const PSQL_PATH = "psql";
 const DOCKER_PATH = "docker";
+const DOCKER_DATABASE_URL = DATABASE_URL
+  ? DATABASE_URL.replace("@127.0.0.1:", "@host.docker.internal:").replace(
+      "@localhost:",
+      "@host.docker.internal:",
+    )
+  : undefined;
 
 const PSQL_AVAILABLE = (() => {
   try {
@@ -77,6 +83,10 @@ const PREPARED_INTELLIGENCE_MIGRATION_SQL = readFileSync(
 function runSql(sqlText: string): string {
   assert.ok(DATABASE_URL, "DATABASE_URL must be provided to run prepared intelligence schema tests");
   if (USE_DOCKER_PSQL) {
+    assert.ok(
+      DOCKER_DATABASE_URL,
+      "DATABASE_URL must be provided to run prepared intelligence schema tests",
+    );
     return execFileSync(
       DOCKER_PATH,
       [
@@ -84,7 +94,7 @@ function runSql(sqlText: string): string {
         "--rm",
         "postgres:16-alpine",
         "psql",
-        DATABASE_URL,
+        DOCKER_DATABASE_URL,
         "--set",
         "ON_ERROR_STOP=1",
         "--tuples-only",
@@ -114,7 +124,7 @@ function runSqlExpectFailure(sqlText: string): { status: number | null; stderr: 
           "--rm",
           "postgres:16-alpine",
           "psql",
-          DATABASE_URL,
+          DOCKER_DATABASE_URL as string,
           "--set",
           "ON_ERROR_STOP=1",
           "--tuples-only",
@@ -165,16 +175,22 @@ function insertDataset(): string {
 
 function insertRole(): string {
   return runSql(`
-    insert into career_roles (title)
-    values ('role_' || substr(md5(random()::text), 1, 8))
+    insert into career_roles (code, title)
+    values (
+      'CR_TEST_' || substr(md5(random()::text), 1, 8),
+      'role_' || substr(md5(random()::text), 1, 8)
+    )
     returning id;
   `);
 }
 
 function insertSkill(): string {
   return runSql(`
-    insert into skills (name)
-    values ('skill_' || substr(md5(random()::text), 1, 8))
+    insert into skills (code, name)
+    values (
+      'SK_TEST_' || substr(md5(random()::text), 1, 8),
+      'skill_' || substr(md5(random()::text), 1, 8)
+    )
     returning id;
   `);
 }
