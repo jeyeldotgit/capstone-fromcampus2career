@@ -1,0 +1,1134 @@
+{
+  "_meta": {
+    "description": "Corrected course_skills seed. All skill_id values reference real DB skill IDs (segment pattern 00000000-0000-0001-0000-XXXXXXXXXXXX). Old seed used a phantom taxonomy (segment 00000000-0000-0000-0000-XXXXXXXXXXXX) that does not exist in the DB — every FK was a dangling reference.",
+    "id_format": {
+      "courses_bsit": "10000000-0000-0000-0000-XXXXXXXXXXXX",
+      "courses_bscs": "20000000-0000-0000-0000-XXXXXXXXXXXX",
+      "skills_real_db": "00000000-0000-0001-0000-XXXXXXXXXXXX"
+    },
+    "depth_weight_scale": {
+      "1.00": "Primary focus — course is principally about this skill",
+      "0.75": "Strong secondary contribution",
+      "0.50": "Moderate contribution",
+      "0.25": "Light exposure or supporting context"
+    },
+    "drop_rationale": "Abstract academic concepts with no DB counterpart are dropped: 'Discrete Mathematics', 'Calculus', 'Logic and Proofs', 'Formal Languages', 'Computational Theory', 'Computer Fundamentals', 'Digital Literacy', 'Data Structures (abstract)', 'Algorithms (abstract)', 'Business Process Modeling', 'Systems Analysis', 'Systems Design'. Courses that taught only these concepts are mapped to the closest industry-relevant skills actually present in the DB.",
+    "skill_id_reference": {
+      "SK001_python": "00000000-0000-0001-0000-000000000001",
+      "SK002_java": "00000000-0000-0001-0000-000000000002",
+      "SK003_javascript": "00000000-0000-0001-0000-000000000003",
+      "SK004_typescript": "00000000-0000-0001-0000-000000000004",
+      "SK005_c": "00000000-0000-0001-0000-000000000005",
+      "SK006_cpp": "00000000-0000-0001-0000-000000000006",
+      "SK008_php": "00000000-0000-0001-0000-000000000008",
+      "SK009_kotlin": "00000000-0000-0001-0000-000000000009",
+      "SK015_shell_scripting": "00000000-0000-0001-0000-000000000015",
+      "SK016_sql": "00000000-0000-0001-0000-000000000016",
+      "SK017_html": "00000000-0000-0001-0000-000000000017",
+      "SK018_css": "00000000-0000-0001-0000-000000000018",
+      "SK019_react": "00000000-0000-0001-0000-000000000019",
+      "SK021_vuejs": "00000000-0000-0001-0000-000000000021",
+      "SK023_nodejs": "00000000-0000-0001-0000-000000000023",
+      "SK024_expressjs": "00000000-0000-0001-0000-000000000024",
+      "SK025_rest_api": "00000000-0000-0001-0000-000000000025",
+      "SK027_laravel": "00000000-0000-0001-0000-000000000027",
+      "SK028_django": "00000000-0000-0001-0000-000000000028",
+      "SK031_tailwind": "00000000-0000-0001-0000-000000000031",
+      "SK032_bootstrap": "00000000-0000-0001-0000-000000000032",
+      "SK033_responsive_web_design": "00000000-0000-0001-0000-000000000033",
+      "SK034_web_accessibility": "00000000-0000-0001-0000-000000000034",
+      "SK035_android_development": "00000000-0000-0001-0000-000000000035",
+      "SK037_react_native": "00000000-0000-0001-0000-000000000037",
+      "SK038_flutter": "00000000-0000-0001-0000-000000000038",
+      "SK040_postgresql": "00000000-0000-0001-0000-000000000040",
+      "SK041_mysql": "00000000-0000-0001-0000-000000000041",
+      "SK043_mongodb": "00000000-0000-0001-0000-000000000043",
+      "SK047_database_design": "00000000-0000-0001-0000-000000000047",
+      "SK048_database_indexing": "00000000-0000-0001-0000-000000000048",
+      "SK049_orm_usage": "00000000-0000-0001-0000-000000000049",
+      "SK051_data_analysis": "00000000-0000-0001-0000-000000000051",
+      "SK052_machine_learning": "00000000-0000-0001-0000-000000000052",
+      "SK053_deep_learning": "00000000-0000-0001-0000-000000000053",
+      "SK054_nlp": "00000000-0000-0001-0000-000000000054",
+      "SK055_data_visualization": "00000000-0000-0001-0000-000000000055",
+      "SK056_pandas": "00000000-0000-0001-0000-000000000056",
+      "SK057_numpy": "00000000-0000-0001-0000-000000000057",
+      "SK058_scikit_learn": "00000000-0000-0001-0000-000000000058",
+      "SK064_statistical_analysis": "00000000-0000-0001-0000-000000000064",
+      "SK065_business_intelligence": "00000000-0000-0001-0000-000000000065",
+      "SK071_cloud_computing": "00000000-0000-0001-0000-000000000071",
+      "SK072_aws": "00000000-0000-0001-0000-000000000072",
+      "SK075_docker": "00000000-0000-0001-0000-000000000075",
+      "SK077_cicd": "00000000-0000-0001-0000-000000000077",
+      "SK078_github_actions": "00000000-0000-0001-0000-000000000078",
+      "SK080_linux_administration": "00000000-0000-0001-0000-000000000080",
+      "SK084_network_security": "00000000-0000-0001-0000-000000000084",
+      "SK085_ethical_hacking": "00000000-0000-0001-0000-000000000085",
+      "SK086_cryptography": "00000000-0000-0001-0000-000000000086",
+      "SK087_web_app_security": "00000000-0000-0001-0000-000000000087",
+      "SK090_iam": "00000000-0000-0001-0000-000000000090",
+      "SK093_secure_coding": "00000000-0000-0001-0000-000000000093",
+      "SK094_networking_fundamentals": "00000000-0000-0001-0000-000000000094",
+      "SK095_network_protocols": "00000000-0000-0001-0000-000000000095",
+      "SK096_network_administration": "00000000-0000-0001-0000-000000000096",
+      "SK098_network_troubleshooting": "00000000-0000-0001-0000-000000000098",
+      "SK100_oop": "00000000-0000-0001-0000-000000000100"
+    }
+  },
+
+  "course_skills": [
+    {
+      "_comment": "IT101 — Introduction to Computing. Maps to foundational computing exposure; no deep industry skill. Light SQL and Linux exposure as context for 'software in society'.",
+      "course_id": "10000000-0000-0000-0000-000000000001",
+      "course_code": "IT101",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000080",
+          "skill_name": "Linux Administration",
+          "depth_weight": 0.25
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000094",
+          "skill_name": "Computer Networking Fundamentals",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "IT102 — Computer Programming 1. Introductory programming taught with C or Java in PH curricula; Python also common. OOP introduced lightly.",
+      "course_id": "10000000-0000-0000-0000-000000000002",
+      "course_code": "IT102",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000005",
+          "skill_name": "C",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000001",
+          "skill_name": "Python",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000002",
+          "skill_name": "Java",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000100",
+          "skill_name": "Object-Oriented Programming",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "IT103 — Discrete Mathematics. Pure academic; no direct DB skill. Closest industry mappings are SQL (set/relational reasoning) and Python (algorithmic thinking).",
+      "course_id": "10000000-0000-0000-0000-000000000003",
+      "course_code": "IT103",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000016",
+          "skill_name": "SQL",
+          "depth_weight": 0.25
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000001",
+          "skill_name": "Python",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "GE101 — Understanding the Self. No technical skills; omitted from course_skills entirely.",
+      "course_id": "10000000-0000-0000-0000-000000000004",
+      "course_code": "GE101",
+      "mappings": []
+    },
+
+    {
+      "_comment": "GE102 — Mathematics in the Modern World. Quantitative reasoning; maps to statistical analysis and data analysis at light exposure.",
+      "course_id": "10000000-0000-0000-0000-000000000005",
+      "course_code": "GE102",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000064",
+          "skill_name": "Statistical Analysis",
+          "depth_weight": 0.25
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000051",
+          "skill_name": "Data Analysis",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "IT201 — Data Structures and Algorithms. DB has no 'Data Structures' or 'Algorithms' skill. Maps to the languages used to implement them and the problem-solving context they support.",
+      "course_id": "10000000-0000-0000-0000-000000000006",
+      "course_code": "IT201",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000001",
+          "skill_name": "Python",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000002",
+          "skill_name": "Java",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000006",
+          "skill_name": "C++",
+          "depth_weight": 0.5
+        }
+      ]
+    },
+
+    {
+      "_comment": "IT202 — Object-Oriented Programming. Direct match to OOP (SK100). Also builds Java, Python, and C++ skills.",
+      "course_id": "10000000-0000-0000-0000-000000000007",
+      "course_code": "IT202",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000100",
+          "skill_name": "Object-Oriented Programming",
+          "depth_weight": 1.0
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000002",
+          "skill_name": "Java",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000001",
+          "skill_name": "Python",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000006",
+          "skill_name": "C++",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "IT203 — Database Management Systems. Maps to SQL (primary), database design, PostgreSQL/MySQL as the engines taught, ORM usage.",
+      "course_id": "10000000-0000-0000-0000-000000000008",
+      "course_code": "IT203",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000016",
+          "skill_name": "SQL",
+          "depth_weight": 1.0
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000047",
+          "skill_name": "Database Design",
+          "depth_weight": 1.0
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000041",
+          "skill_name": "MySQL",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000040",
+          "skill_name": "PostgreSQL",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000048",
+          "skill_name": "Database Indexing",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000049",
+          "skill_name": "ORM Usage",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "IT204 — Web Development. HTML, CSS, JS primary. Bootstrap and Tailwind for styling. Node.js/Express for backend tier. REST API design introduced.",
+      "course_id": "10000000-0000-0000-0000-000000000009",
+      "course_code": "IT204",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000017",
+          "skill_name": "HTML",
+          "depth_weight": 1.0
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000018",
+          "skill_name": "CSS",
+          "depth_weight": 1.0
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000003",
+          "skill_name": "JavaScript",
+          "depth_weight": 1.0
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000033",
+          "skill_name": "Responsive Web Design",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000032",
+          "skill_name": "Bootstrap",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000023",
+          "skill_name": "Node.js",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000025",
+          "skill_name": "REST API Design",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000024",
+          "skill_name": "Express.js",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "IT205 — Human Computer Interaction. UI/UX focus. Web Accessibility (WCAG) is the main technical skill with industry traction. Responsive design reinforced.",
+      "course_id": "10000000-0000-0000-0000-000000000010",
+      "course_code": "IT205",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000034",
+          "skill_name": "Web Accessibility",
+          "depth_weight": 1.0
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000033",
+          "skill_name": "Responsive Web Design",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000031",
+          "skill_name": "Tailwind CSS",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "IT301 — Information Assurance and Security. Direct matches: Cryptography, Network Security, Web App Security, IAM, Secure Coding.",
+      "course_id": "10000000-0000-0000-0000-000000000011",
+      "course_code": "IT301",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000086",
+          "skill_name": "Cryptography",
+          "depth_weight": 1.0
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000084",
+          "skill_name": "Network Security",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000087",
+          "skill_name": "Web Application Security",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000090",
+          "skill_name": "Identity & Access Management",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000093",
+          "skill_name": "Secure Coding Practices",
+          "depth_weight": 0.5
+        }
+      ]
+    },
+
+    {
+      "_comment": "IT302 — Networking 1. Networking fundamentals, protocols, and administration. Introduces Linux shell for network tooling.",
+      "course_id": "10000000-0000-0000-0000-000000000012",
+      "course_code": "IT302",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000094",
+          "skill_name": "Computer Networking Fundamentals",
+          "depth_weight": 1.0
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000095",
+          "skill_name": "Network Protocols",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000096",
+          "skill_name": "Network Administration",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000098",
+          "skill_name": "Network Troubleshooting",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000084",
+          "skill_name": "Network Security",
+          "depth_weight": 0.25
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000080",
+          "skill_name": "Linux Administration",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "IT303 — Systems Analysis and Design. No direct DB skill for 'Systems Analysis' or 'Systems Design'. Maps to REST API design (architecture output), SQL (data modeling in analysis), and adjacent industry skills.",
+      "course_id": "10000000-0000-0000-0000-000000000013",
+      "course_code": "IT303",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000025",
+          "skill_name": "REST API Design",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000047",
+          "skill_name": "Database Design",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000016",
+          "skill_name": "SQL",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "IT304 — Mobile Application Development. Android (Java/Kotlin), cross-platform (React Native, Flutter) are primary. OOP strongly reinforced.",
+      "course_id": "10000000-0000-0000-0000-000000000014",
+      "course_code": "IT304",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000035",
+          "skill_name": "Android Development",
+          "depth_weight": 1.0
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000009",
+          "skill_name": "Kotlin",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000037",
+          "skill_name": "React Native",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000038",
+          "skill_name": "Flutter",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000100",
+          "skill_name": "Object-Oriented Programming",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000002",
+          "skill_name": "Java",
+          "depth_weight": 0.5
+        }
+      ]
+    },
+
+    {
+      "_comment": "IT305 — Software Engineering. Maps to version control (Git), CI/CD, Docker, GitHub Actions, and PHP/Laravel as common stack in PH industry projects.",
+      "course_id": "10000000-0000-0000-0000-000000000015",
+      "course_code": "IT305",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000077",
+          "skill_name": "CI/CD",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000078",
+          "skill_name": "GitHub Actions",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000075",
+          "skill_name": "Docker",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000087",
+          "skill_name": "Web Application Security",
+          "depth_weight": 0.25
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000093",
+          "skill_name": "Secure Coding Practices",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "IT401 — Capstone Project 1. Broad coverage: full-stack web, DB, REST APIs, version control, documentation-heavy.",
+      "course_id": "10000000-0000-0000-0000-000000000016",
+      "course_code": "IT401",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000025",
+          "skill_name": "REST API Design",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000047",
+          "skill_name": "Database Design",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000016",
+          "skill_name": "SQL",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000077",
+          "skill_name": "CI/CD",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000078",
+          "skill_name": "GitHub Actions",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000003",
+          "skill_name": "JavaScript",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000019",
+          "skill_name": "React",
+          "depth_weight": 0.5
+        }
+      ]
+    },
+
+    {
+      "_comment": "IT402 — Capstone Project 2. Full implementation and deployment. Docker, cloud, testing, monitoring added on top of Capstone 1 skills.",
+      "course_id": "10000000-0000-0000-0000-000000000017",
+      "course_code": "IT402",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000075",
+          "skill_name": "Docker",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000071",
+          "skill_name": "Cloud Computing Fundamentals",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000077",
+          "skill_name": "CI/CD",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000025",
+          "skill_name": "REST API Design",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000016",
+          "skill_name": "SQL",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000087",
+          "skill_name": "Web Application Security",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "IT403 — Internship / OJT. Broad professional exposure. Weights kept low because skill development depends on host company stack.",
+      "course_id": "10000000-0000-0000-0000-000000000018",
+      "course_code": "IT403",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000077",
+          "skill_name": "CI/CD",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000078",
+          "skill_name": "GitHub Actions",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000075",
+          "skill_name": "Docker",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000025",
+          "skill_name": "REST API Design",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000016",
+          "skill_name": "SQL",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000080",
+          "skill_name": "Linux Administration",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "IT404 — IT Elective (Cloud / AI focus). Cloud fundamentals, AWS, Docker, Python for AI workloads.",
+      "course_id": "10000000-0000-0000-0000-000000000019",
+      "course_code": "IT404",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000071",
+          "skill_name": "Cloud Computing Fundamentals",
+          "depth_weight": 1.0
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000072",
+          "skill_name": "AWS",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000075",
+          "skill_name": "Docker",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000001",
+          "skill_name": "Python",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000052",
+          "skill_name": "Machine Learning",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000080",
+          "skill_name": "Linux Administration",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "CS101 — Introduction to Computing (BSCS). Slightly deeper than IT101; introduces Python and Linux as first tools.",
+      "course_id": "20000000-0000-0000-0000-000000000001",
+      "course_code": "CS101",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000001",
+          "skill_name": "Python",
+          "depth_weight": 0.25
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000080",
+          "skill_name": "Linux Administration",
+          "depth_weight": 0.25
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000094",
+          "skill_name": "Computer Networking Fundamentals",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "CS102 — Programming Fundamentals. C/Python primary in BSCS programs. OOP lightly introduced.",
+      "course_id": "20000000-0000-0000-0000-000000000002",
+      "course_code": "CS102",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000005",
+          "skill_name": "C",
+          "depth_weight": 1.0
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000001",
+          "skill_name": "Python",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000100",
+          "skill_name": "Object-Oriented Programming",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "CS103 — Discrete Structures. Same rationale as IT103. Closest industry skills are SQL and Python at light exposure.",
+      "course_id": "20000000-0000-0000-0000-000000000003",
+      "course_code": "CS103",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000016",
+          "skill_name": "SQL",
+          "depth_weight": 0.25
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000001",
+          "skill_name": "Python",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "MATH101 — Calculus 1. No DB skill maps to calculus directly. Statistical analysis and NumPy (numerical computing) are the closest industry-relevant connections.",
+      "course_id": "20000000-0000-0000-0000-000000000004",
+      "course_code": "MATH101",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000064",
+          "skill_name": "Statistical Analysis",
+          "depth_weight": 0.25
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000057",
+          "skill_name": "NumPy",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "CS201 — Data Structures. Stronger language depth than IT201; C++ and Python primary in CS programs. Java also common.",
+      "course_id": "20000000-0000-0000-0000-000000000005",
+      "course_code": "CS201",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000006",
+          "skill_name": "C++",
+          "depth_weight": 1.0
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000001",
+          "skill_name": "Python",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000002",
+          "skill_name": "Java",
+          "depth_weight": 0.5
+        }
+      ]
+    },
+
+    {
+      "_comment": "CS202 — Algorithms. Algorithm design maps most strongly to Python and C++ as implementation vehicles. Statistical analysis for complexity reasoning.",
+      "course_id": "20000000-0000-0000-0000-000000000006",
+      "course_code": "CS202",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000001",
+          "skill_name": "Python",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000006",
+          "skill_name": "C++",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000064",
+          "skill_name": "Statistical Analysis",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "CS203 — Computer Organization. Linux administration is the primary industry-facing skill (low-level OS interaction). Shell scripting added for assembly/system context.",
+      "course_id": "20000000-0000-0000-0000-000000000007",
+      "course_code": "CS203",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000080",
+          "skill_name": "Linux Administration",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000015",
+          "skill_name": "Shell Scripting",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000005",
+          "skill_name": "C",
+          "depth_weight": 0.5
+        }
+      ]
+    },
+
+    {
+      "_comment": "CS204 — Operating Systems. Linux admin primary. Shell scripting, Docker (containerization builds on OS concepts), and network security as supporting skills.",
+      "course_id": "20000000-0000-0000-0000-000000000008",
+      "course_code": "CS204",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000080",
+          "skill_name": "Linux Administration",
+          "depth_weight": 1.0
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000015",
+          "skill_name": "Shell Scripting",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000075",
+          "skill_name": "Docker",
+          "depth_weight": 0.25
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000084",
+          "skill_name": "Network Security",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "CS301 — Theory of Computation. Purely theoretical; no direct DB skill. Python and Shell Scripting at light exposure as the closest implementation contexts.",
+      "course_id": "20000000-0000-0000-0000-000000000009",
+      "course_code": "CS301",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000001",
+          "skill_name": "Python",
+          "depth_weight": 0.25
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000015",
+          "skill_name": "Shell Scripting",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "CS302 — Artificial Intelligence. Strong ML and data science outputs. Python and its ecosystem (Scikit-learn, Pandas, NumPy) are primary.",
+      "course_id": "20000000-0000-0000-0000-000000000010",
+      "course_code": "CS302",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000052",
+          "skill_name": "Machine Learning",
+          "depth_weight": 1.0
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000001",
+          "skill_name": "Python",
+          "depth_weight": 1.0
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000058",
+          "skill_name": "Scikit-learn",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000056",
+          "skill_name": "Pandas",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000057",
+          "skill_name": "NumPy",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000051",
+          "skill_name": "Data Analysis",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000055",
+          "skill_name": "Data Visualization",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "CS303 — Software Engineering. Same profile as IT305 but with stronger Docker and CI/CD depth for CS graduates.",
+      "course_id": "20000000-0000-0000-0000-000000000011",
+      "course_code": "CS303",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000077",
+          "skill_name": "CI/CD",
+          "depth_weight": 1.0
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000078",
+          "skill_name": "GitHub Actions",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000075",
+          "skill_name": "Docker",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000093",
+          "skill_name": "Secure Coding Practices",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000087",
+          "skill_name": "Web Application Security",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "CS304 — Programming Languages. Multiple paradigms: Python (dynamic), Java (OOP), Haskell-style covered under general OOP. Shell scripting for scripting-paradigm exposure.",
+      "course_id": "20000000-0000-0000-0000-000000000012",
+      "course_code": "CS304",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000100",
+          "skill_name": "Object-Oriented Programming",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000001",
+          "skill_name": "Python",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000002",
+          "skill_name": "Java",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000015",
+          "skill_name": "Shell Scripting",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "CS401 — Thesis 1. Research + system design phase. Specific tech stack varies; REST API, SQL, Python for analysis, and version control are common baselines.",
+      "course_id": "20000000-0000-0000-0000-000000000013",
+      "course_code": "CS401",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000025",
+          "skill_name": "REST API Design",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000016",
+          "skill_name": "SQL",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000047",
+          "skill_name": "Database Design",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000001",
+          "skill_name": "Python",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000078",
+          "skill_name": "GitHub Actions",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000051",
+          "skill_name": "Data Analysis",
+          "depth_weight": 0.5
+        }
+      ]
+    },
+
+    {
+      "_comment": "CS402 — Thesis 2. Full implementation and defense. Docker, cloud deployment, and data visualization added as the system goes live.",
+      "course_id": "20000000-0000-0000-0000-000000000014",
+      "course_code": "CS402",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000075",
+          "skill_name": "Docker",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000071",
+          "skill_name": "Cloud Computing Fundamentals",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000055",
+          "skill_name": "Data Visualization",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000077",
+          "skill_name": "CI/CD",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000016",
+          "skill_name": "SQL",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000087",
+          "skill_name": "Web Application Security",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "CS403 — Internship / OJT (BSCS). Same broad exposure as IT403; CS grads lean more toward backend and ML stacks.",
+      "course_id": "20000000-0000-0000-0000-000000000015",
+      "course_code": "CS403",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000001",
+          "skill_name": "Python",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000077",
+          "skill_name": "CI/CD",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000075",
+          "skill_name": "Docker",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000025",
+          "skill_name": "REST API Design",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000016",
+          "skill_name": "SQL",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000080",
+          "skill_name": "Linux Administration",
+          "depth_weight": 0.25
+        }
+      ]
+    },
+
+    {
+      "_comment": "CS404 — CS Elective (ML / Data Science focus). Full ML stack: Python, Scikit-learn, TensorFlow, PyTorch, Pandas, NumPy, NLP.",
+      "course_id": "20000000-0000-0000-0000-000000000016",
+      "course_code": "CS404",
+      "mappings": [
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000052",
+          "skill_name": "Machine Learning",
+          "depth_weight": 1.0
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000001",
+          "skill_name": "Python",
+          "depth_weight": 1.0
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000053",
+          "skill_name": "Deep Learning",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000058",
+          "skill_name": "Scikit-learn",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000059",
+          "skill_name": "TensorFlow",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000060",
+          "skill_name": "PyTorch",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000056",
+          "skill_name": "Pandas",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000057",
+          "skill_name": "NumPy",
+          "depth_weight": 0.75
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000054",
+          "skill_name": "Natural Language Processing",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000051",
+          "skill_name": "Data Analysis",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000055",
+          "skill_name": "Data Visualization",
+          "depth_weight": 0.5
+        },
+        {
+          "skill_id": "00000000-0000-0001-0000-000000000064",
+          "skill_name": "Statistical Analysis",
+          "depth_weight": 0.5
+        }
+      ]
+    }
+  ]
+}
