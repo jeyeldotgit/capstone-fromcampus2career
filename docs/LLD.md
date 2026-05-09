@@ -750,7 +750,7 @@ skill_aliases
 - code text unique not null
 - skill_id uuid references skills(id)
 - alias text unique not null
-- normalized_alias text not null
+- normalized_alias text unique not null
 - source text
 - notes text
 - reviewed boolean default false
