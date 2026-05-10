@@ -30,6 +30,7 @@ Compute role-level skill requirements from mapped pipeline output and publish im
 - Requirement aggregation per role-skill pair
 - Creation of a new requirement version record
 - Insert of corresponding role-skill requirement rows tied to that version
+- Return of the produced requirement version as the pipeline job `output_version` handoff to orchestration
 
 **Out of scope**
 
@@ -42,11 +43,14 @@ Compute role-level skill requirements from mapped pipeline output and publish im
 
 - Publication must be versioned and immutable
 - All requirement rows must reference a valid published version
-- Publish flow must integrate with pipeline job lifecycle output version fields
+- Publish flow must integrate with pipeline job lifecycle output version fields by returning the produced version to the orchestrator
+- The orchestrator, not the publishing module, owns the terminal `pipeline_jobs` status update
+- A failed publish must not produce a completed job status or a completed ingestion event
 
 **Exit criterion (verifiable done condition)**
 
 1. Pipeline run creates exactly one new requirement version for a publish event.
 2. Requirement rows are inserted with valid role, skill, and version references.
 3. Tests verify uniqueness constraints and FK integrity on published rows.
-4. Pipeline job output version is persisted for successful publish runs.
+4. Publishing returns the created requirement version as `output_version` to the orchestration layer.
+5. Pipeline job output version is persisted for successful publish runs through the orchestration completion path.

@@ -34,13 +34,22 @@ Implement CSV required-column and row-level validation with explicit rejected-ro
 - Cleaning and normalization transformations
 - Deduplication logic
 - Skill mapping and output publishing
+- Final `pipeline_jobs` terminal status selection
 - TypeScript read-layer behavior
+
+**Decisions already made**
+
+- This spec owns rejected-row detection, rejected-row persistence, and rejected-row count handoff.
+- The pipeline orchestrator owns the final `complete` versus `partial` terminal status decision.
+- If rejected rows exist and the downstream publish succeeds, the orchestrator marks the job `partial`.
+- If rejected rows exist but a fatal pipeline error prevents publish, the orchestrator marks the job `failed`.
 
 **Implementation requirements**
 
 - Rejection reasons must be deterministic and human-debuggable
 - Invalid rows must not pass to downstream transformation stages
 - Rejected-row writes must include row index and raw payload snapshot
+- Validation must return or persist a rejected-row count that orchestration can use during terminal status selection
 
 **Exit criterion (verifiable done condition)**
 
@@ -48,3 +57,4 @@ Implement CSV required-column and row-level validation with explicit rejected-ro
 2. Each rejected row includes a non-empty reason and valid `pipeline_job_id`.
 3. Tests verify valid rows continue to downstream flow while invalid rows are blocked.
 4. Job rejected count matches inserted rejected-row count.
+5. Tests verify the rejected-row count is available to orchestration without requiring orchestration to inspect raw rejected-row payloads.
