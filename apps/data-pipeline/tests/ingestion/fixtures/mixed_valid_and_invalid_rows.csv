@@ -1,0 +1,5 @@
+external_id,source,title,company,location,posted_at,description,url,employment_type,salary_min,salary_max,currency,experience_level
+job-100,acme_jobs,Data Analyst,Acme Inc,Remote,2026-05-01,Analyze product data,https://example.com/jobs/100,Full-time,70000,90000,USD,Entry
+job-101,acme_jobs,Backend Engineer,,San Francisco CA,2026-05-02,Build APIs,https://example.com/jobs/101,Full-time,90000,120000,USD,Mid
+job-102,acme_jobs,Product Analyst,Gamma LLC,Remote,2026-05-03,Analyze product funnels,,Contract,,,USD,Entry
+job-103,acme_jobs,ML Engineer,Delta Co,New York NY,not-a-date,Build models,https://example.com/jobs/103,Full-time,110000,140000,USD,Senior

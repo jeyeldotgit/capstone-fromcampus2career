@@ -1,0 +1,2 @@
+external_id,source,title,company,location,posted_at,description,employment_type,salary_min,salary_max,currency,experience_level
+job-missing-url,acme_jobs,Data Analyst,Acme Inc,Remote,2026-05-01,Analyze product data,Full-time,70000,90000,USD,Entry
