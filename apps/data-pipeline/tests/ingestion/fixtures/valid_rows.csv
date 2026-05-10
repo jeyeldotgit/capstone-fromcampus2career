@@ -1,0 +1,3 @@
+external_id,source,title,company,location,posted_at,description,url,employment_type,salary_min,salary_max,currency,experience_level
+job-001,acme_jobs,Data Analyst,Acme Inc,Remote,2026-05-01,Analyze product data,https://example.com/jobs/1,Full-time,70000,90000,USD,Entry
+job-002,acme_jobs,Backend Engineer,Beta Labs,San Francisco CA,2026-05-02T09:30:00Z,Build APIs,https://example.com/jobs/2,Contract,,,USD,Mid
