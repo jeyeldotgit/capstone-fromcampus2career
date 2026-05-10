@@ -221,6 +221,7 @@ Optional columns:
 | Supabase Storage | admin uploads datasets, Python downloads datasets | bucket path plus dataset metadata row |
 | Upstash Redis | API cache, rate limit, and idempotency lookup | typed cache keys and TTL policies |
 | Cloud Run Jobs | API triggers pipeline execution | job id plus dataset id plus execution parameters |
+| Admin realtime status | API notifies admin clients of pipeline status changes | authenticated server-pushed event with `pipeline_job_id`; clients refetch through API |
 | Expo Push | API sends student notifications | notification payload contract |
 | Optional LLM adapter | API or job uses asynchronous enrichment only | structured prompt input, structured explanation output |
 
@@ -310,7 +311,9 @@ Admin registers dataset
 -> Python pipeline validates and transforms source data
 -> Python publishes new versioned intelligence tables
 -> Python updates pipeline_jobs status and output version
--> Admin dashboard reads results through API
+-> Python emits pipeline.ingestion.completed or pipeline.ingestion.failed app event
+-> TypeScript app_events consumer notifies admin dashboard over authenticated realtime channel
+-> Admin dashboard refetches authoritative job details through API
 ```
 
 ## 6. Tech State Management Strategy
@@ -336,6 +339,7 @@ Cross-screen transient UI state may use Zustand.
 - Use TanStack Query in mobile and admin for all API-backed reads and mutations.
 - Query keys must include version-bearing identifiers when relevant.
 - Mutations must invalidate or update only the directly affected query keys.
+- Admin pipeline job status updates should use authenticated server-pushed notifications from the API, not continuous client polling. Notifications carry identifiers only; clients refetch authoritative state through API routes.
 - Offline cache persistence in mobile is allowed only for low-risk reads such as career lists and latest analysis summaries.
 
 ### Cache Strategy

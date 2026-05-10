@@ -245,6 +245,8 @@ The first production-friendly version uses scheduled and event-triggered jobs wi
 - student skill profile recomputation job
 - optional LLM enrichment job
 
+Pipeline status changes are persisted in `pipeline_jobs` and emitted through `app_events`. The admin dashboard should receive authenticated server-pushed status notifications from the API and refetch authoritative job details through API routes, rather than continuously polling for job completion.
+
 Growth-stage options:
 
 - Temporal for durable, cross-language workflows
@@ -553,6 +555,7 @@ The following decisions are locked for implementation:
 - Career search uses deterministic alias plus `pg_trgm` search in Supabase Postgres.
 - `pgvector` is explicitly deferred and is not part of the MVP architecture.
 - A lightweight `app_events` outbox table will exist in the MVP for durable internal eventing.
+- Admin pipeline status updates use API-owned authenticated realtime notifications backed by `app_events`; the database remains the source of truth.
 - Cloud Run Jobs and Cloud Scheduler are the only approved workflow runtime for Python in the MVP.
 - Cloud Run remains an approved future migration target for the API, but not the MVP hosting choice.
 

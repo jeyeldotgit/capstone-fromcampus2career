@@ -157,6 +157,7 @@ Base path:
 | `POST` | `/admin/datasets/:id/ingest` | Trigger ingestion job |
 | `GET` | `/admin/pipeline-jobs` | List pipeline jobs |
 | `GET` | `/admin/pipeline-jobs/:id` | Get pipeline job details |
+| `GET` | `/admin/pipeline-job-events` | Subscribe to authenticated pipeline job status notifications |
 
 ## 3. Request and Response Contracts
 
@@ -234,6 +235,16 @@ type PipelineJobResponse = {
   finishedAt?: string;
 };
 ```
+
+```ts
+type PipelineJobStatusEvent = {
+  type: "pipeline.ingestion.completed" | "pipeline.ingestion.failed";
+  pipelineJobId: string;
+  status: "complete" | "failed" | "partial";
+};
+```
+
+Pipeline job status notifications are delivered through an authenticated API-owned realtime channel such as SSE or WebSocket. The notification payload must only contain routing identifiers and safe status metadata. Admin clients must refetch `PipelineJobResponse` through the normal API route after receiving a notification.
 
 ## 4. ORM and Type-Safety Contracts
 
@@ -880,6 +891,13 @@ pipeline.ingestion.failed
 market.requirements.published
 ```
 
+Event ownership:
+
+- TypeScript API emits `admin.dataset.ingest_requested` after creating the dataset and pipeline job records.
+- Python pipeline emits `pipeline.ingestion.completed` after a successful publish and terminal job update.
+- Python pipeline emits `pipeline.ingestion.failed` after a fatal pipeline failure and failed job update.
+- A successful run with rejected rows uses job status `partial` and still emits `pipeline.ingestion.completed` with `status: "partial"` in the payload.
+
 Minimum event payload fields:
 
 ```ts
@@ -1285,6 +1303,7 @@ Approved boundary contracts:
 - API to Redis: typed key helpers and TTL policies
 - API to Cloud Run Jobs: authenticated execution request plus `pipeline_job_id`
 - Python to database: Pydantic publish models plus explicit insert or upsert logic
+- API to admin realtime clients: authenticated SSE or WebSocket notification carrying `pipeline_job_id` for API refetch
 - API to Expo Push: notification service adapter with stable payload shape
 
 Boundary rules:

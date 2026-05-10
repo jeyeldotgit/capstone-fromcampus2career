@@ -29,7 +29,7 @@ Create a cross-runtime acceptance suite that verifies complete Phase 1 behavior 
 **In scope**
 
 - End-to-end verification of ingestion success path and rejected-row path
-- Assertions for publication of `role_skill_requirements`, `role_requirement_versions`, `sdi_snapshots`, `skill_decay_signals`, `pipeline_jobs`, and `pipeline_rejected_rows`
+- Assertions for publication of `role_skill_requirements`, `role_requirement_versions`, `sdi_snapshots`, `skill_decay_signals`, `pipeline_jobs`, `pipeline_rejected_rows`, and terminal `app_events`
 - Assertions that TypeScript can read prepared outputs after publish
 
 **Out of scope**
@@ -44,10 +44,13 @@ Create a cross-runtime acceptance suite that verifies complete Phase 1 behavior 
 - Tests must use deterministic fixtures and no mandatory LLM dependency
 - Acceptance flow must fail clearly when any checkpoint table is missing or empty
 - Boundary test must validate both data publication and TypeScript consumption
+- Boundary test must validate that `pipeline_jobs.output_version` matches the published requirement version
+- Boundary test must validate `complete` versus `partial` status based on rejected-row count
 
 **Exit criterion (verifiable done condition)**
 
 1. One runnable acceptance command validates full Phase 1 checkpoint outputs.
 2. Test confirms invalid rows are rejected with explicit reasons.
 3. Test confirms TypeScript read layer successfully reads published prepared outputs.
-4. Test confirms pipeline job status is recorded and visible for the run.
+4. Test confirms pipeline job status, counters, and `output_version` are recorded and visible for the run.
+5. Test confirms terminal ingestion events are written to `app_events`.
