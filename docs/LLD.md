@@ -86,53 +86,53 @@ Base path:
 
 ### Auth Routes
 
-| Method | Path | Purpose |
-| --- | --- | --- |
+| Method | Path            | Purpose                                               |
+| ------ | --------------- | ----------------------------------------------------- |
 | `POST` | `/auth/session` | Validate Supabase session and return app user summary |
-| `POST` | `/auth/logout` | Clear server-side session artifacts if used |
+| `POST` | `/auth/logout`  | Clear server-side session artifacts if used           |
 
 ### Student Profile Routes
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| `GET` | `/profile/me` | Get authenticated student profile |
-| `PUT` | `/profile/me` | Update authenticated student profile |
-| `GET` | `/profile/me/skill-profile` | Get latest computed student skill profile |
+| Method | Path                        | Purpose                                   |
+| ------ | --------------------------- | ----------------------------------------- |
+| `GET`  | `/profile/me`               | Get authenticated student profile         |
+| `PUT`  | `/profile/me`               | Update authenticated student profile      |
+| `GET`  | `/profile/me/skill-profile` | Get latest computed student skill profile |
 
 ### Course Routes
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| `GET` | `/courses` | List available courses |
-| `GET` | `/student/courses` | List student's courses and grades |
-| `POST` | `/student/courses` | Add a course and grade |
-| `PUT` | `/student/courses/:id` | Update a course and grade entry |
-| `DELETE` | `/student/courses/:id` | Remove a course entry |
+| Method   | Path                   | Purpose                           |
+| -------- | ---------------------- | --------------------------------- |
+| `GET`    | `/courses`             | List available courses            |
+| `GET`    | `/student/courses`     | List student's courses and grades |
+| `POST`   | `/student/courses`     | Add a course and grade            |
+| `PUT`    | `/student/courses/:id` | Update a course and grade entry   |
+| `DELETE` | `/student/courses/:id` | Remove a course entry             |
 
 ### Career Routes
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| `GET` | `/careers/search?q=` | Return ranked role suggestions from free text |
-| `GET` | `/careers/:roleId` | Get career role details |
-| `POST` | `/careers/confirm` | Set or confirm student's target role |
+| Method | Path                 | Purpose                                       |
+| ------ | -------------------- | --------------------------------------------- |
+| `GET`  | `/careers/search?q=` | Return ranked role suggestions from free text |
+| `GET`  | `/careers/:roleId`   | Get career role details                       |
+| `POST` | `/careers/confirm`   | Set or confirm student's target role          |
 
 ### Skill Gap Routes
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| `POST` | `/skills/analyze` | Run fast skill-gap analysis for target role |
-| `GET` | `/skills/analysis/latest` | Get latest skill-gap analysis |
-| `GET` | `/skills/analysis/:id` | Get a specific analysis result |
-| `GET` | `/skills/decay-alerts` | Get relevant skill decay alerts |
+| Method | Path                      | Purpose                                     |
+| ------ | ------------------------- | ------------------------------------------- |
+| `POST` | `/skills/analyze`         | Run fast skill-gap analysis for target role |
+| `GET`  | `/skills/analysis/latest` | Get latest skill-gap analysis               |
+| `GET`  | `/skills/analysis/:id`    | Get a specific analysis result              |
+| `GET`  | `/skills/decay-alerts`    | Get relevant skill decay alerts             |
 
 ### Roadmap Routes
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| `GET` | `/roadmap` | Get roadmap for latest analysis |
-| `POST` | `/roadmap/:itemId/complete` | Mark roadmap item as complete |
-| `POST` | `/roadmap/:itemId/reopen` | Reopen completed roadmap item |
+| Method | Path                        | Purpose                         |
+| ------ | --------------------------- | ------------------------------- |
+| `GET`  | `/roadmap`                  | Get roadmap for latest analysis |
+| `POST` | `/roadmap/:itemId/complete` | Mark roadmap item as complete   |
+| `POST` | `/roadmap/:itemId/reopen`   | Reopen completed roadmap item   |
 
 ### Admin Routes
 
@@ -258,15 +258,15 @@ Every external boundary must have both compile-time types and runtime validation
 
 Recommended tooling:
 
-| Layer | Tooling | Purpose |
-| --- | --- | --- |
-| TypeScript database access | Drizzle ORM | Typed schema, typed queries, migrations |
-| API request/response validation | Zod | Runtime validation and inferred TypeScript contracts |
-| Shared TypeScript contracts | `packages/shared` | Reusable schemas and types for API, mobile, admin |
-| Python pipeline validation | Pydantic | Runtime validation for raw, cleaned, and published data |
-| Python static typing | pyright | Static checks for data pipeline code |
-| Database constraints | Supabase Postgres | Source-of-truth integrity rules |
-| Contract tests | Vitest + pytest fixtures | Verify Python outputs can be consumed by TypeScript |
+| Layer                           | Tooling                  | Purpose                                                 |
+| ------------------------------- | ------------------------ | ------------------------------------------------------- |
+| TypeScript database access      | Drizzle ORM              | Typed schema, typed queries, migrations                 |
+| API request/response validation | Zod                      | Runtime validation and inferred TypeScript contracts    |
+| Shared TypeScript contracts     | `packages/shared`        | Reusable schemas and types for API, mobile, admin       |
+| Python pipeline validation      | Pydantic                 | Runtime validation for raw, cleaned, and published data |
+| Python static typing            | pyright                  | Static checks for data pipeline code                    |
+| Database constraints            | Supabase Postgres        | Source-of-truth integrity rules                         |
+| Contract tests                  | Vitest + pytest fixtures | Verify Python outputs can be consumed by TypeScript     |
 
 ### TypeScript ORM
 
@@ -333,8 +333,7 @@ export const SkillAnalyzeRequestSchema = z.object({
   idempotencyKey: z.string().optional(),
 });
 
-export type SkillAnalyzeRequest =
-  z.infer<typeof SkillAnalyzeRequestSchema>;
+export type SkillAnalyzeRequest = z.infer<typeof SkillAnalyzeRequestSchema>;
 ```
 
 The API must validate incoming payloads at runtime even when the frontend uses shared TypeScript types.
@@ -421,6 +420,277 @@ Rules:
 
 The database is the contract between the TypeScript application and the Python data pipeline.
 
+### Mermaid ERD
+
+```mermaid
+erDiagram
+    USERS {
+        uuid id PK
+        text email
+        text role
+        timestamptz created_at
+    }
+
+    STUDENT_PROFILES {
+        uuid id PK
+        uuid user_id FK
+        text full_name
+        text program
+        text university
+        date expected_grad
+        uuid target_role_id FK
+        int profile_version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    COURSES {
+        uuid id PK
+        text code
+        text title
+        int units
+        text description
+        boolean is_active
+    }
+
+    STUDENT_COURSES {
+        uuid id PK
+        uuid student_id FK
+        uuid course_id FK
+        numeric grade
+        text semester
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    SKILLS {
+        uuid id PK
+        text name
+        text category
+        boolean is_active
+        timestamptz created_at
+    }
+
+    SKILL_ALIASES {
+        uuid id PK
+        uuid skill_id FK
+        text alias
+        text source
+        boolean reviewed
+        timestamptz created_at
+    }
+
+    COURSE_SKILLS {
+        uuid id PK
+        uuid course_id FK
+        uuid skill_id FK
+        numeric depth_weight
+    }
+
+    CAREER_ROLES {
+        uuid id PK
+        text title
+        text description
+        boolean is_active
+        timestamptz created_at
+    }
+
+    CAREER_ROLE_ALIASES {
+        uuid id PK
+        uuid role_id FK
+        text alias
+        text normalized_alias
+        timestamptz created_at
+    }
+
+    MARKET_DATASETS {
+        uuid id PK
+        text file_path
+        text source
+        text status
+        uuid uploaded_by FK
+        timestamptz created_at
+    }
+
+    JOB_POSTINGS {
+        uuid id PK
+        uuid dataset_id FK
+        text source
+        text title
+        text company
+        text raw_text
+        uuid role_id FK
+        date posted_at
+        timestamptz ingested_at
+    }
+
+    STUDENT_SKILL_PROFILES {
+        uuid id PK
+        uuid student_id FK
+        int profile_version
+        timestamptz computed_at
+    }
+
+    STUDENT_SKILL_PROFILE_ITEMS {
+        uuid id PK
+        uuid profile_id FK
+        uuid skill_id FK
+        numeric depth
+        jsonb evidence
+    }
+
+    ROLE_REQUIREMENT_VERSIONS {
+        uuid id PK
+        int version
+        uuid dataset_id FK
+        timestamptz computed_at
+        boolean is_current
+    }
+
+    ROLE_SKILL_REQUIREMENTS {
+        uuid id PK
+        uuid role_id FK
+        uuid skill_id FK
+        int requirement_version
+        numeric required_depth
+        numeric demand_weight
+        int evidence_count
+    }
+
+    SDI_SNAPSHOTS {
+        uuid id PK
+        uuid role_id FK
+        uuid skill_id FK
+        numeric demand_index
+        date snapshot_date
+        int requirement_version
+    }
+
+    SKILL_DECAY_SIGNALS {
+        uuid id PK
+        uuid role_id FK
+        uuid skill_id FK
+        numeric decay_rate
+        numeric confidence
+        timestamptz detected_at
+        int requirement_version
+        boolean is_active
+    }
+
+    SKILL_GAP_RESULTS {
+        uuid id PK
+        uuid student_id FK
+        uuid role_id FK
+        int profile_version
+        int role_requirement_version
+        numeric readiness_score
+        timestamptz created_at
+    }
+
+    SKILL_GAP_RESULT_ITEMS {
+        uuid id PK
+        uuid result_id FK
+        uuid skill_id FK
+        numeric required_depth
+        numeric student_depth
+        numeric demand_weight
+        numeric gap_score
+        int priority
+    }
+
+    RECOMMENDATION_CATALOG {
+        uuid id PK
+        uuid skill_id FK
+        text item_type
+        text title
+        text description
+        text url
+        text difficulty
+        int estimated_hours
+        boolean is_active
+    }
+
+    ROADMAP_ITEMS {
+        uuid id PK
+        uuid student_id FK
+        uuid analysis_result_id FK
+        uuid recommendation_id FK
+        int priority
+        text status
+        text explanation
+        timestamptz created_at
+        timestamptz completed_at
+    }
+
+    PIPELINE_JOBS {
+        uuid id PK
+        uuid dataset_id FK
+        text job_type
+        text status
+        int processed_rows
+        int rejected_rows
+        int output_version
+        text error_message
+        timestamptz started_at
+        timestamptz finished_at
+        timestamptz created_at
+    }
+
+    APP_EVENTS {
+        uuid id PK
+        text event_type
+        text aggregate_type
+        uuid aggregate_id
+        jsonb payload
+        text status
+        timestamptz available_at
+        timestamptz processed_at
+        text error_message
+        timestamptz created_at
+    }
+
+    PIPELINE_REJECTED_ROWS {
+        uuid id PK
+        uuid pipeline_job_id FK
+        int row_number
+        jsonb raw_payload
+        text reason
+        timestamptz created_at
+    }
+
+    USERS ||--|| STUDENT_PROFILES : "owns"
+    USERS ||--o{ MARKET_DATASETS : "uploads"
+    CAREER_ROLES ||--o{ STUDENT_PROFILES : "targeted by"
+    STUDENT_PROFILES ||--o{ STUDENT_COURSES : "takes"
+    COURSES ||--o{ STUDENT_COURSES : "included in"
+    SKILLS ||--o{ SKILL_ALIASES : "has aliases"
+    COURSES ||--o{ COURSE_SKILLS : "maps"
+    SKILLS ||--o{ COURSE_SKILLS : "mapped from"
+    CAREER_ROLES ||--o{ CAREER_ROLE_ALIASES : "has aliases"
+    MARKET_DATASETS ||--o{ JOB_POSTINGS : "contains"
+    CAREER_ROLES ||--o{ JOB_POSTINGS : "classified as"
+    STUDENT_PROFILES ||--o{ STUDENT_SKILL_PROFILES : "produces"
+    STUDENT_SKILL_PROFILES ||--o{ STUDENT_SKILL_PROFILE_ITEMS : "contains"
+    SKILLS ||--o{ STUDENT_SKILL_PROFILE_ITEMS : "measured by"
+    MARKET_DATASETS ||--o{ ROLE_REQUIREMENT_VERSIONS : "produces"
+    CAREER_ROLES ||--o{ ROLE_SKILL_REQUIREMENTS : "requires"
+    SKILLS ||--o{ ROLE_SKILL_REQUIREMENTS : "required skill"
+    CAREER_ROLES ||--o{ SDI_SNAPSHOTS : "tracked for"
+    SKILLS ||--o{ SDI_SNAPSHOTS : "tracked skill"
+    CAREER_ROLES ||--o{ SKILL_DECAY_SIGNALS : "decays in"
+    SKILLS ||--o{ SKILL_DECAY_SIGNALS : "decaying skill"
+    STUDENT_PROFILES ||--o{ SKILL_GAP_RESULTS : "analyzed for"
+    CAREER_ROLES ||--o{ SKILL_GAP_RESULTS : "benchmarked against"
+    SKILL_GAP_RESULTS ||--o{ SKILL_GAP_RESULT_ITEMS : "contains"
+    SKILLS ||--o{ SKILL_GAP_RESULT_ITEMS : "gap skill"
+    SKILLS ||--o{ RECOMMENDATION_CATALOG : "recommended for"
+    STUDENT_PROFILES ||--o{ ROADMAP_ITEMS : "owns"
+    SKILL_GAP_RESULTS ||--o{ ROADMAP_ITEMS : "drives"
+    RECOMMENDATION_CATALOG ||--o{ ROADMAP_ITEMS : "references"
+    MARKET_DATASETS ||--o{ PIPELINE_JOBS : "processed by"
+    PIPELINE_JOBS ||--o{ PIPELINE_REJECTED_ROWS : "rejects"
+```
+
 ### Core User Tables
 
 Identity note:
@@ -477,8 +747,10 @@ student_courses
 ```txt
 skills
 - id uuid primary key
+- code text unique not null
 - name text unique not null
 - category text
+- notes text
 - is_active boolean default true
 - created_at timestamptz not null
 ```
@@ -486,9 +758,12 @@ skills
 ```txt
 skill_aliases
 - id uuid primary key
+- code text unique not null
 - skill_id uuid references skills(id)
 - alias text unique not null
+- normalized_alias text unique not null
 - source text
+- notes text
 - reviewed boolean default false
 - created_at timestamptz not null
 ```
@@ -507,8 +782,10 @@ course_skills
 ```txt
 career_roles
 - id uuid primary key
+- code text unique not null
 - title text unique not null
 - description text
+- category text
 - is_active boolean default true
 - created_at timestamptz not null
 ```
@@ -516,6 +793,7 @@ career_roles
 ```txt
 career_role_aliases
 - id uuid primary key
+- code text unique not null
 - role_id uuid not null references career_roles(id)
 - alias text unique not null
 - normalized_alias text not null
@@ -970,6 +1248,13 @@ Normalization rules:
 - remove repeated spaces
 - normalize common punctuation
 - optionally map common Filipino/English phrases
+
+Persisted alias normalization contract:
+
+- `skill_aliases.normalized_alias` and `career_role_aliases.normalized_alias` use a narrower canonicalization rule than free-text search queries.
+- The persisted alias key is `lower(regexp_replace(btrim(alias), '[[:space:]]+', ' ', 'g'))`.
+- This rule trims leading/trailing whitespace, collapses repeated internal whitespace, and lowercases text.
+- Punctuation stripping and phrase mapping may be used for query matching, but they must not redefine the stored `normalized_alias` contract unless the schema and constraints are updated together.
 
 Confidence scoring:
 

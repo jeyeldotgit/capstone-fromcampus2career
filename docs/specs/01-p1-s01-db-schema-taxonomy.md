@@ -6,13 +6,15 @@
 **Responsibility**  
 Define the Phase 1 foundational taxonomy and dataset schema in Supabase Postgres so all downstream pipeline and read-layer work has stable relational contracts.
 
-**Depends on**  
-None.
+**Depends on**
+
+- `P1-S00-db-environment-bootstrap`
 
 **Inputs**
 
 - [dev-roadmap.md](/c:/Users/BEBELABS/Documents/FromCampus2Career/docs/dev-roadmap.md)
 - [LLD.md](/c:/Users/BEBELABS/Documents/FromCampus2Career/docs/LLD.md)
+- [00-p1-s00-db-environment-bootstrap.md](/c:/Users/BEBELABS/Documents/FromCampus2Career/docs/specs/00-p1-s00-db-environment-bootstrap.md)
 
 **Files/artifacts produced**
 
@@ -40,6 +42,52 @@ None.
 - Keep schema and migrations in sync and reproducible on an empty database
 - Use explicit PK/FK/unique/check constraints for contract-critical integrity
 - Keep naming and required columns aligned with Phase 1 vocabulary in `LLD.md`
+
+**Column listings**
+
+```txt
+skills
+- id uuid primary key
+- code text unique not null
+- name text unique not null
+- category text
+- notes text
+- is_active boolean default true
+- created_at timestamptz not null
+```
+
+```txt
+skill_aliases
+- id uuid primary key
+- code text unique not null
+- skill_id uuid references skills(id)
+- alias text unique not null
+- source text
+- notes text
+- reviewed boolean default false
+- created_at timestamptz not null
+```
+
+```txt
+career_roles
+- id uuid primary key
+- code text unique not null
+- title text unique not null
+- description text
+- category text
+- is_active boolean default true
+- created_at timestamptz not null
+```
+
+```txt
+career_role_aliases
+- id uuid primary key
+- code text unique not null
+- role_id uuid not null references career_roles(id)
+- alias text unique not null
+- normalized_alias text not null
+- created_at timestamptz not null
+```
 
 **Exit criterion (verifiable done condition)**
 
