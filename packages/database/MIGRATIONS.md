@@ -281,3 +281,24 @@ Before applying any migration to live/shared DB:
   - `role_requirement_versions` intentionally omits `is_current`; latest-version reads should use `ORDER BY version DESC LIMIT 1`
 - Safe apply rule:
   - apply only after P1-S01 tables already exist because the prepared-intelligence tables reference `market_datasets`, `career_roles`, and `skills`
+
+## P1-S02-BJ App Events Backjob Migration Note
+
+- Migration file: `packages/database/migrations/20260510130000_add_app_events.sql`
+- Depends on: `20260504100000_p1_s02_pipeline_ops.sql`
+- Why this is a backjob:
+  - the original P1-S02 pipeline-ops merge added `pipeline_jobs` and `pipeline_rejected_rows`, but the MVP durable `app_events` outbox artifact was still missing
+- Adds:
+  - `app_events` for durable internal workflow events emitted by the TypeScript API and Python pipeline
+  - `app_events_status_available_at_idx` for outbox polling by status and availability time
+  - `app_events_aggregate_type_aggregate_id_idx` for aggregate-scoped event lookup
+- Key integrity rules:
+  - `app_events.status` is constrained to `pending`, `processing`, `processed`, or `failed`
+  - `event_type`, `aggregate_type`, `payload`, `status`, `available_at`, and `created_at` are non-null
+  - `status`, `available_at`, and `created_at` use database defaults for new events
+  - `aggregate_id`, `processed_at`, and `error_message` remain nullable for system-level events and pending work
+- Status vocabulary note:
+  - `app_events` uses outbox-processing states: `pending`, `processing`, `processed`, `failed`
+  - `pipeline_jobs` keeps ingestion lifecycle states: `pending`, `running`, `complete`, `failed`, `partial`
+- Safe apply rule:
+  - apply after P1-S02 so pipeline operational schema exists before dependent event-emission work is added
