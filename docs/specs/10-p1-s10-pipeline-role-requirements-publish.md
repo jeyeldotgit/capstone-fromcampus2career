@@ -50,8 +50,8 @@ All four must be merged into main before starting.
 **Out of scope — do not touch**
 
 - SDI snapshot computation (that is P1-S11)
-- Skill decay signal computation (that is P1-S12)
-- TypeScript read repositories (that is P1-S14)
+- Skill decay signal computation (that is P1-S11)
+- TypeScript read repositories (that is P1-S12)
 - API endpoints or admin UI
 - `pipeline_jobs` terminal status update (owned by orchestrator in P1-S06)
 - Any file not listed in OUTPUT
