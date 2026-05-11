@@ -313,6 +313,7 @@ Pipeline data:
 - rejected rows
 - pipeline logs
 - dataset versions
+- role-skill evidence summaries
 - market snapshot versions
 
 ## 11. Caching and Precomputation Strategy
