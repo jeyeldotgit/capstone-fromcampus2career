@@ -658,6 +658,17 @@ erDiagram
         timestamptz created_at
     }
 
+    PIPELINE_SKILL_EVIDENCE_SUMMARY {
+        uuid id PK
+        uuid dataset_id FK
+        uuid pipeline_job_id FK
+        uuid role_id FK
+        uuid skill_id FK
+        int evidence_count
+        boolean threshold_met
+        timestamptz created_at
+    }
+
     USERS ||--|| STUDENT_PROFILES : "owns"
     USERS ||--o{ MARKET_DATASETS : "uploads"
     CAREER_ROLES ||--o{ STUDENT_PROFILES : "targeted by"
@@ -689,6 +700,10 @@ erDiagram
     RECOMMENDATION_CATALOG ||--o{ ROADMAP_ITEMS : "references"
     MARKET_DATASETS ||--o{ PIPELINE_JOBS : "processed by"
     PIPELINE_JOBS ||--o{ PIPELINE_REJECTED_ROWS : "rejects"
+    MARKET_DATASETS ||--o{ PIPELINE_SKILL_EVIDENCE_SUMMARY : "summarizes evidence from"
+    PIPELINE_JOBS ||--o{ PIPELINE_SKILL_EVIDENCE_SUMMARY : "produces evidence"
+    CAREER_ROLES ||--o{ PIPELINE_SKILL_EVIDENCE_SUMMARY : "evidence for"
+    SKILLS ||--o{ PIPELINE_SKILL_EVIDENCE_SUMMARY : "evidenced skill"
 ```
 
 ### Core User Tables
@@ -983,6 +998,20 @@ pipeline_rejected_rows
 - created_at timestamptz not null
 ```
 
+```txt
+pipeline_skill_evidence_summary
+- id uuid primary key
+- dataset_id uuid not null references market_datasets(id)
+- pipeline_job_id uuid not null references pipeline_jobs(id)
+- role_id uuid not null references career_roles(id)
+- skill_id uuid not null references skills(id)
+- evidence_count int not null
+- threshold_met boolean not null default false
+- created_at timestamptz not null default now()
+- unique(pipeline_job_id, role_id, skill_id)
+- check(evidence_count >= 0)
+```
+
 ## 6. Read Models and Materialized Views
 
 Read models should support fast mobile and admin screens.
@@ -1021,6 +1050,8 @@ profile_version
 role_requirement_version
 created_at
 ```
+
+`admin_pipeline_job_summary` may read `pipeline_skill_evidence_summary` by `pipeline_job_id` to show role-skill evidence counts and threshold status for each completed or partial pipeline run.
 
 Materialized views should be refreshed after pipeline publication or relevant student profile changes.
 

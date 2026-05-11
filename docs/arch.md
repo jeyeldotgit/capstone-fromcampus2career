@@ -136,6 +136,7 @@ The database is the single source of truth. Each domain concept has one authorit
 | Recommendation library | `recommendation_catalog` |
 | Student roadmap state | `roadmap_items` |
 | Workflow and job state | `pipeline_jobs`, `app_events` |
+| Pipeline role-skill evidence summary | `pipeline_skill_evidence_summary`, written by the Python pipeline |
 
 ### Data Ownership Rules
 
