@@ -524,6 +524,15 @@ erDiagram
         timestamptz ingested_at
     }
 
+    JOB_POSTING_SKILLS {
+        uuid id PK
+        uuid job_posting_id FK
+        uuid role_id FK
+        uuid skill_id FK
+        numeric normalized_depth
+        timestamptz created_at
+    }
+
     STUDENT_SKILL_PROFILES {
         uuid id PK
         uuid student_id FK
@@ -680,6 +689,9 @@ erDiagram
     CAREER_ROLES ||--o{ CAREER_ROLE_ALIASES : "has aliases"
     MARKET_DATASETS ||--o{ JOB_POSTINGS : "contains"
     CAREER_ROLES ||--o{ JOB_POSTINGS : "classified as"
+    JOB_POSTINGS ||--o{ JOB_POSTING_SKILLS : "maps skills"
+    CAREER_ROLES ||--o{ JOB_POSTING_SKILLS : "skill evidence for"
+    SKILLS ||--o{ JOB_POSTING_SKILLS : "posting evidence"
     STUDENT_PROFILES ||--o{ STUDENT_SKILL_PROFILES : "produces"
     STUDENT_SKILL_PROFILES ||--o{ STUDENT_SKILL_PROFILE_ITEMS : "contains"
     SKILLS ||--o{ STUDENT_SKILL_PROFILE_ITEMS : "measured by"
@@ -838,6 +850,18 @@ job_postings
 - posted_at date
 - ingested_at timestamptz not null
 - unique(source, title, company, posted_at)
+```
+
+```txt
+job_posting_skills
+- id uuid primary key
+- job_posting_id uuid not null references job_postings(id)
+- role_id uuid not null references career_roles(id)
+- skill_id uuid not null references skills(id)
+- normalized_depth numeric(5,4)
+- created_at timestamptz not null
+- unique(job_posting_id, role_id, skill_id)
+- check(normalized_depth is null or normalized_depth between 0 and 1)
 ```
 
 ### Prepared Intelligence Tables
