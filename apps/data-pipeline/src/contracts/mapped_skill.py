@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints
 
 NonEmptyStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 SkillMatchType = Literal["exact", "alias"]
@@ -20,3 +20,10 @@ class SkillMappingResult(BaseModel):
     posting_id: UUID
     mapped: list[MappedSkillItem]
     unresolved_terms: list[str]
+
+
+class MappedRoleSkillRow(BaseModel):
+    job_posting_id: UUID
+    role_id: UUID
+    skill_id: UUID
+    normalized_depth: float | None = Field(default=None, ge=0.0, le=1.0)

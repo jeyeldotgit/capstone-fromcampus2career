@@ -1,5 +1,5 @@
 import { sql, type InferInsertModel, type InferSelectModel } from "drizzle-orm";
-import { check, integer, pgTable, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, integer, pgTable, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { marketDatasets } from "./market_datasets";
 
 export const roleRequirementVersions = pgTable(
@@ -11,6 +11,7 @@ export const roleRequirementVersions = pgTable(
       .notNull()
       .references(() => marketDatasets.id),
     computedAt: timestamp("computed_at", { withTimezone: true }).notNull().defaultNow(),
+    isCurrent: boolean("is_current").notNull().default(false),
   },
   (table) => [
     uniqueIndex("role_requirement_versions_version_unique").on(table.version),

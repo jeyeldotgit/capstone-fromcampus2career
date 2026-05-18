@@ -45,6 +45,7 @@ const REQUIRED_CONSTRAINTS = [
   "role_requirement_versions_version_positive_chk",
   "role_skill_requirements_role_id_fkey",
   "role_skill_requirements_skill_id_fkey",
+  "role_skill_requirements_requirement_version_fkey",
   "role_skill_requirements_role_skill_version_unique",
   "role_skill_requirements_required_depth_range_chk",
   "role_skill_requirements_demand_weight_range_chk",
@@ -77,6 +78,11 @@ const TAXONOMY_MIGRATION_SQL = readFileSync(
 
 const PREPARED_INTELLIGENCE_MIGRATION_SQL = readFileSync(
   new URL("../../migrations/20260504110000_p1_s03_prepared_intelligence.sql", import.meta.url),
+  "utf8",
+);
+
+const ROLE_REQUIREMENT_PUBLISH_CONTRACT_MIGRATION_SQL = readFileSync(
+  new URL("../../migrations/20260518120000_align_role_requirement_publish_contract.sql", import.meta.url),
   "utf8",
 );
 
@@ -161,6 +167,20 @@ function tableExists(tableName: string): boolean {
   return exists === "t";
 }
 
+function columnExists(tableName: string, columnName: string): boolean {
+  const exists = runSql(`
+    select exists (
+      select 1
+      from information_schema.columns
+      where table_schema = 'public'
+        and table_name = '${tableName}'
+        and column_name = '${columnName}'
+    );
+  `);
+
+  return exists === "t";
+}
+
 function insertDataset(): string {
   return runSql(`
     insert into market_datasets (file_path, source, status)
@@ -219,6 +239,10 @@ suite("P1-S03 prepared intelligence schema migration", () => {
     if (!tableExists("role_requirement_versions")) {
       runSql(PREPARED_INTELLIGENCE_MIGRATION_SQL);
     }
+
+    if (!columnExists("role_requirement_versions", "is_current")) {
+      runSql(ROLE_REQUIREMENT_PUBLISH_CONTRACT_MIGRATION_SQL);
+    }
   });
 
   test("creates prepared intelligence tables, constraints, and indexes", () => {
@@ -267,6 +291,20 @@ suite("P1-S03 prepared intelligence schema migration", () => {
     `);
 
     expect(Number(insertedVersion)).toBeGreaterThan(0);
+  });
+
+  test("defaults role_requirement_versions.is_current to false", () => {
+    const datasetId = insertDataset();
+    const isCurrent = runSql(`
+      insert into role_requirement_versions (version, dataset_id)
+      values (
+        floor(random() * 1000000 + 1)::integer,
+        '${datasetId}'::uuid
+      )
+      returning is_current::text;
+    `);
+
+    expect(isCurrent).toBe("false");
   });
 
   test("rejects a duplicate role_requirement_versions.version", () => {
@@ -359,6 +397,33 @@ suite("P1-S03 prepared intelligence schema migration", () => {
         '${roleId}'::uuid,
         '00000000-0000-0000-0000-000000000000'::uuid,
         ${requirementVersion},
+        0.6,
+        0.5,
+        5
+      );
+    `);
+
+    expect(failingInsert.status).not.toBe(0);
+    expect(`${failingInsert.stderr}\n${failingInsert.stdout}`).toMatch(/foreign key constraint/i);
+  });
+
+  test("rejects an invalid role_skill_requirements.requirement_version foreign key", () => {
+    const roleId = insertRole();
+    const skillId = insertSkill();
+
+    const failingInsert = runSqlExpectFailure(`
+      insert into role_skill_requirements (
+        role_id,
+        skill_id,
+        requirement_version,
+        required_depth,
+        demand_weight,
+        evidence_count
+      )
+      values (
+        '${roleId}'::uuid,
+        '${skillId}'::uuid,
+        2147483647,
         0.6,
         0.5,
         5
