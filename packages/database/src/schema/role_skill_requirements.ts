@@ -1,6 +1,7 @@
 import { sql, type InferInsertModel, type InferSelectModel } from "drizzle-orm";
-import { check, index, integer, numeric, pgTable, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { check, foreignKey, index, integer, numeric, pgTable, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { careerRoles } from "./career_roles";
+import { roleRequirementVersions } from "./role_requirement_versions";
 import { skills } from "./skills";
 
 export const roleSkillRequirements = pgTable(
@@ -26,6 +27,11 @@ export const roleSkillRequirements = pgTable(
     ),
     index("role_skill_requirements_role_version_idx").on(table.roleId, table.requirementVersion),
     index("role_skill_requirements_skill_version_idx").on(table.skillId, table.requirementVersion),
+    foreignKey({
+      columns: [table.requirementVersion],
+      foreignColumns: [roleRequirementVersions.version],
+      name: "role_skill_requirements_requirement_version_fkey",
+    }),
     check(
       "role_skill_requirements_required_depth_range_chk",
       sql`${table.requiredDepth} >= 0 and ${table.requiredDepth} <= 1`,

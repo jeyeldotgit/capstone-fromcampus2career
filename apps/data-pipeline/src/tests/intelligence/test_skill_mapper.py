@@ -9,6 +9,9 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
+from pydantic import ValidationError
+
+from src.contracts.mapped_skill import MappedRoleSkillRow
 from src.contracts.normalized_job_posting import NormalizedJobPosting
 from src.intelligence.alias_lookup import AliasLookup, SkillLookupItem, build_alias_lookup
 from src.intelligence.skill_mapper import SkillNameLookup, map_skills
@@ -126,3 +129,24 @@ def test_no_db_write(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert len(result.mapped) == 1
     assert connection_calls == []
+
+
+def test_mapped_role_skill_row_allows_nullable_normalized_depth() -> None:
+    row = MappedRoleSkillRow(
+        job_posting_id=POSTING_ID,
+        role_id=UUID("44444444-4444-4444-4444-444444444444"),
+        skill_id=PYTHON_ID,
+        normalized_depth=None,
+    )
+
+    assert row.normalized_depth is None
+
+
+def test_mapped_role_skill_row_rejects_out_of_range_normalized_depth() -> None:
+    with pytest.raises(ValidationError):
+        MappedRoleSkillRow(
+            job_posting_id=POSTING_ID,
+            role_id=UUID("44444444-4444-4444-4444-444444444444"),
+            skill_id=PYTHON_ID,
+            normalized_depth=1.0001,
+        )

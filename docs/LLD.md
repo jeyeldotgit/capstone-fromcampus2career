@@ -684,6 +684,7 @@ erDiagram
     STUDENT_SKILL_PROFILES ||--o{ STUDENT_SKILL_PROFILE_ITEMS : "contains"
     SKILLS ||--o{ STUDENT_SKILL_PROFILE_ITEMS : "measured by"
     MARKET_DATASETS ||--o{ ROLE_REQUIREMENT_VERSIONS : "produces"
+    ROLE_REQUIREMENT_VERSIONS ||--o{ ROLE_SKILL_REQUIREMENTS : "versions"
     CAREER_ROLES ||--o{ ROLE_SKILL_REQUIREMENTS : "requires"
     SKILLS ||--o{ ROLE_SKILL_REQUIREMENTS : "required skill"
     CAREER_ROLES ||--o{ SDI_SNAPSHOTS : "tracked for"
@@ -874,7 +875,7 @@ role_skill_requirements
 - id uuid primary key
 - role_id uuid not null references career_roles(id)
 - skill_id uuid not null references skills(id)
-- requirement_version int not null
+- requirement_version int not null references role_requirement_versions(version)
 - required_depth numeric(5,4) not null
 - demand_weight numeric(5,4) not null
 - evidence_count int default 0
