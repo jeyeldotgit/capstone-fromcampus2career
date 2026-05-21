@@ -1,7 +1,7 @@
 import { sql, type InferInsertModel, type InferSelectModel } from "drizzle-orm";
 import { check, date, index, integer, numeric, pgTable, uniqueIndex, uuid } from "drizzle-orm/pg-core";
-import { careerRoles } from "./career_roles";
-import { skills } from "./skills";
+import { careerRoles } from "./career_roles.js";
+import { skills } from "./skills.js";
 
 export const sdiSnapshots = pgTable(
   "sdi_snapshots",

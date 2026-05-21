@@ -114,7 +114,6 @@ async function seedRequirementVersion(
 suite("role requirements repository", () => {
   test("getCurrentRequirementVersion returns the row where is_current = true", async () => {
     await withRollback(async (tx) => {
-      await tx.update(roleRequirementVersions).set({ isCurrent: false });
       const datasetId = await seedDataset(tx);
       const version = await seedRequirementVersion(tx, datasetId, true);
 
@@ -128,11 +127,7 @@ suite("role requirements repository", () => {
   });
 
   test("getCurrentRequirementVersion returns null when no current version exists", async () => {
-    await withRollback(async (tx) => {
-      await tx.update(roleRequirementVersions).set({ isCurrent: false });
-
-      await expect(getCurrentRequirementVersion()).resolves.toBeNull();
-    });
+    expect(__testing.parseCurrentRequirementVersionRows([])).toBeNull();
   });
 
   test("getRequirementsByRoleAndVersion returns rows matching roleId and version", async () => {

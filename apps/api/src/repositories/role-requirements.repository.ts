@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { roleRequirementVersions, roleSkillRequirements } from "@fcc/database";
 import {
   RoleRequirementVersionSchema,
@@ -49,11 +49,19 @@ function parseRoleSkillRequirement(row: RoleSkillRequirementRow): RoleSkillRequi
   });
 }
 
+function parseCurrentRequirementVersionRows(
+  rows: RequirementVersionRow[],
+): RoleRequirementVersion | null {
+  const [row] = rows;
+  return row === undefined ? null : parseRequirementVersion(row);
+}
+
 function buildCurrentRequirementVersionQuery(database: RepositoryDatabase = getRepositoryDatabase()) {
   return database
     .select()
     .from(roleRequirementVersions)
     .where(eq(roleRequirementVersions.isCurrent, true))
+    .orderBy(desc(roleRequirementVersions.version))
     .limit(1);
 }
 
@@ -75,9 +83,7 @@ function buildRequirementsByRoleAndVersionQuery(
 
 export async function getCurrentRequirementVersion(): Promise<RoleRequirementVersion | null> {
   const rows = await buildCurrentRequirementVersionQuery();
-  const [row] = rows;
-
-  return row === undefined ? null : parseRequirementVersion(row);
+  return parseCurrentRequirementVersionRows(rows);
 }
 
 export async function getRequirementsByRoleAndVersion(
@@ -91,6 +97,7 @@ export async function getRequirementsByRoleAndVersion(
 export const __testing = {
   buildCurrentRequirementVersionQuery,
   buildRequirementsByRoleAndVersionQuery,
+  parseCurrentRequirementVersionRows,
   parseRequirementVersion,
   parseRoleSkillRequirement,
   setDatabaseForTests: setRepositoryDatabaseForTests,
