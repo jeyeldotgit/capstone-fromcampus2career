@@ -7,18 +7,23 @@
     "dev": "pnpm build && node dist/index.js",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "test": "echo \"No tests yet\"",
+    "test": "vitest run",
     "lint": "echo \"No lint yet\""
   },
   "dependencies": {
+    "@fcc/database": "workspace:*",
+    "@fcc/shared": "workspace:*",
     "@hono/node-server": "^1.19.6",
     "dotenv": "^16.6.1",
+    "drizzle-orm": "^0.45.2",
     "hono": "^4.10.1",
+    "postgres": "^3.4.9",
     "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/node": "^24.9.1",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.5"
   }
 }

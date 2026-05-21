@@ -1,6 +1,6 @@
 import { sql, type InferInsertModel, type InferSelectModel } from "drizzle-orm";
 import { boolean, check, integer, pgTable, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
-import { marketDatasets } from "./market_datasets";
+import { marketDatasets } from "./market_datasets.js";
 
 export const roleRequirementVersions = pgTable(
   "role_requirement_versions",

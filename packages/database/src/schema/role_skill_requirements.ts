@@ -1,8 +1,8 @@
 import { sql, type InferInsertModel, type InferSelectModel } from "drizzle-orm";
 import { check, foreignKey, index, integer, numeric, pgTable, uniqueIndex, uuid } from "drizzle-orm/pg-core";
-import { careerRoles } from "./career_roles";
-import { roleRequirementVersions } from "./role_requirement_versions";
-import { skills } from "./skills";
+import { careerRoles } from "./career_roles.js";
+import { roleRequirementVersions } from "./role_requirement_versions.js";
+import { skills } from "./skills.js";
 
 export const roleSkillRequirements = pgTable(
   "role_skill_requirements",
