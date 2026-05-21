@@ -11,9 +11,13 @@
     "lint": "echo \"No lint yet\""
   },
   "dependencies": {
+    "@fcc/database": "workspace:*",
+    "@fcc/shared": "workspace:*",
     "@hono/node-server": "^1.19.6",
     "dotenv": "^16.6.1",
+    "drizzle-orm": "^0.45.2",
     "hono": "^4.10.1",
+    "postgres": "^3.4.9",
     "zod": "^4.1.12"
   },
   "devDependencies": {
