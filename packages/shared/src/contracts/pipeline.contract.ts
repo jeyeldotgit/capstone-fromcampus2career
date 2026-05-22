@@ -8,10 +8,17 @@ const IsoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
   message: "Expected an ISO date string",
 });
 
+const PostgresUuidSchema = z.string().regex(
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  {
+    message: "Expected a Postgres UUID string",
+  },
+);
+
 export const RoleRequirementVersionSchema = z.object({
-  id: z.string().uuid(),
+  id: PostgresUuidSchema,
   version: z.number().int().positive(),
-  datasetId: z.string().uuid(),
+  datasetId: PostgresUuidSchema,
   computedAt: IsoDateTimeSchema,
   isCurrent: z.boolean(),
 });
@@ -19,9 +26,9 @@ export const RoleRequirementVersionSchema = z.object({
 export type RoleRequirementVersion = z.infer<typeof RoleRequirementVersionSchema>;
 
 export const RoleSkillRequirementSchema = z.object({
-  id: z.string().uuid(),
-  roleId: z.string().uuid(),
-  skillId: z.string().uuid(),
+  id: PostgresUuidSchema,
+  roleId: PostgresUuidSchema,
+  skillId: PostgresUuidSchema,
   requirementVersion: z.number().int().positive(),
   requiredDepth: z.number().min(0).max(1),
   demandWeight: z.number().min(0.1).max(1),
@@ -31,9 +38,9 @@ export const RoleSkillRequirementSchema = z.object({
 export type RoleSkillRequirement = z.infer<typeof RoleSkillRequirementSchema>;
 
 export const SdiSnapshotSchema = z.object({
-  id: z.string().uuid(),
-  roleId: z.string().uuid(),
-  skillId: z.string().uuid(),
+  id: PostgresUuidSchema,
+  roleId: PostgresUuidSchema,
+  skillId: PostgresUuidSchema,
   demandIndex: z.number().min(0).max(1),
   snapshotDate: IsoDateSchema,
   requirementVersion: z.number().int().positive(),
@@ -42,9 +49,9 @@ export const SdiSnapshotSchema = z.object({
 export type SdiSnapshot = z.infer<typeof SdiSnapshotSchema>;
 
 export const SkillDecaySignalSchema = z.object({
-  id: z.string().uuid(),
-  roleId: z.string().uuid(),
-  skillId: z.string().uuid(),
+  id: PostgresUuidSchema,
+  roleId: PostgresUuidSchema,
+  skillId: PostgresUuidSchema,
   decayRate: z.number().finite(),
   confidence: z.number().min(0).max(1),
   detectedAt: IsoDateTimeSchema,
