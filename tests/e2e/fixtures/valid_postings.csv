@@ -1,0 +1,11 @@
+external_id,source,title,company,location,posted_at,description,url
+00000000-0000-0000-0000-000000000101,p1-s13-valid,Data Analytics Specialist,Valid Insights 01,Manila,2025-01-10,python3,https://example.com/p1-s13-valid-01
+00000000-0000-0000-0000-000000000102,p1-s13-valid,Data Analytics Specialist,Valid Insights 02,Manila,2025-01-11,python3,https://example.com/p1-s13-valid-02
+00000000-0000-0000-0000-000000000103,p1-s13-valid,Data Analytics Specialist,Valid Insights 03,Manila,2025-01-12,python3,https://example.com/p1-s13-valid-03
+00000000-0000-0000-0000-000000000104,p1-s13-valid,Data Analytics Specialist,Valid Insights 04,Manila,2025-01-13,python3,https://example.com/p1-s13-valid-04
+00000000-0000-0000-0000-000000000105,p1-s13-valid,Data Analytics Specialist,Valid Insights 05,Manila,2025-01-14,python3,https://example.com/p1-s13-valid-05
+00000000-0000-0000-0000-000000000106,p1-s13-valid,Data Analytics Specialist,Valid Insights 06,Manila,2025-01-15,sql queries,https://example.com/p1-s13-valid-06
+00000000-0000-0000-0000-000000000107,p1-s13-valid,Data Analytics Specialist,Valid Insights 07,Manila,2025-01-16,sql queries,https://example.com/p1-s13-valid-07
+00000000-0000-0000-0000-000000000108,p1-s13-valid,Data Analytics Specialist,Valid Insights 08,Manila,2025-01-17,sql queries,https://example.com/p1-s13-valid-08
+00000000-0000-0000-0000-000000000109,p1-s13-valid,Data Analytics Specialist,Valid Insights 09,Manila,2025-01-18,sql queries,https://example.com/p1-s13-valid-09
+00000000-0000-0000-0000-000000000110,p1-s13-valid,Data Analytics Specialist,Valid Insights 10,Manila,2025-01-19,sql queries,https://example.com/p1-s13-valid-10

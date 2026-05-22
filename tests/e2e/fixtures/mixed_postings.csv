@@ -1,0 +1,13 @@
+external_id,source,title,company,location,posted_at,description,url
+00000000-0000-0000-0000-000000000201,p1-s13-mixed,Data Analytics Specialist,Mixed Insights 01,Cebu,2025-02-10,python3,https://example.com/p1-s13-mixed-01
+00000000-0000-0000-0000-000000000202,p1-s13-mixed,Data Analytics Specialist,Mixed Insights 02,Cebu,2025-02-11,python3,https://example.com/p1-s13-mixed-02
+00000000-0000-0000-0000-000000000203,p1-s13-mixed,Data Analytics Specialist,Mixed Insights 03,Cebu,2025-02-12,python3,https://example.com/p1-s13-mixed-03
+00000000-0000-0000-0000-000000000204,p1-s13-mixed,Data Analytics Specialist,Mixed Insights 04,Cebu,2025-02-13,python3,https://example.com/p1-s13-mixed-04
+00000000-0000-0000-0000-000000000205,p1-s13-mixed,Data Analytics Specialist,Mixed Insights 05,Cebu,2025-02-14,python3,https://example.com/p1-s13-mixed-05
+00000000-0000-0000-0000-000000000206,p1-s13-mixed,Data Analytics Specialist,Mixed Insights 06,Cebu,2025-02-15,sql queries,https://example.com/p1-s13-mixed-06
+00000000-0000-0000-0000-000000000207,p1-s13-mixed,Data Analytics Specialist,Mixed Insights 07,Cebu,2025-02-16,sql queries,https://example.com/p1-s13-mixed-07
+00000000-0000-0000-0000-000000000208,p1-s13-mixed,Data Analytics Specialist,Mixed Insights 08,Cebu,2025-02-17,sql queries,https://example.com/p1-s13-mixed-08
+00000000-0000-0000-0000-000000000209,p1-s13-mixed,Data Analytics Specialist,Mixed Insights 09,Cebu,2025-02-18,sql queries,https://example.com/p1-s13-mixed-09
+00000000-0000-0000-0000-000000000210,p1-s13-mixed,Data Analytics Specialist,Mixed Insights 10,Cebu,2025-02-19,sql queries,https://example.com/p1-s13-mixed-10
+00000000-0000-0000-0000-000000000211,p1-s13-mixed,Data Analytics Specialist,,Cebu,2025-02-20,python3,https://example.com/p1-s13-mixed-11
+00000000-0000-0000-0000-000000000212,p1-s13-mixed,Data Analytics Specialist,Mixed Insights 12,Cebu,2025-02-21,sql queries,
