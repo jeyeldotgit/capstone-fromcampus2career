@@ -32,6 +32,8 @@ function parseRequirementVersion(row: RequirementVersionRow): RoleRequirementVer
     id: row.id,
     version: row.version,
     datasetId: row.datasetId,
+    periodMonth: row.periodMonth,
+    periodRevision: row.periodRevision,
     computedAt: normalizeDateTime(row.computedAt),
     isCurrent: row.isCurrent,
   });

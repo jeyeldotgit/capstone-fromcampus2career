@@ -19,11 +19,21 @@ export const RoleRequirementVersionSchema = z.object({
   id: PostgresUuidSchema,
   version: z.number().int().positive(),
   datasetId: PostgresUuidSchema,
+  periodMonth: IsoDateSchema,
+  periodRevision: z.number().int().positive(),
   computedAt: IsoDateTimeSchema,
   isCurrent: z.boolean(),
 });
 
 export type RoleRequirementVersion = z.infer<typeof RoleRequirementVersionSchema>;
+
+export const RoleRequirementVersionDatasetSchema = z.object({
+  requirementVersion: z.number().int().positive(),
+  datasetId: PostgresUuidSchema,
+  linkedAt: IsoDateTimeSchema,
+});
+
+export type RoleRequirementVersionDataset = z.infer<typeof RoleRequirementVersionDatasetSchema>;
 
 export const RoleSkillRequirementSchema = z.object({
   id: PostgresUuidSchema,
@@ -60,3 +70,26 @@ export const SkillDecaySignalSchema = z.object({
 });
 
 export type SkillDecaySignal = z.infer<typeof SkillDecaySignalSchema>;
+
+const CurrentMonthlyVersionFieldsSchema = z.object({
+  periodMonth: IsoDateSchema,
+  periodRevision: z.number().int().positive(),
+  triggeringDatasetId: PostgresUuidSchema,
+  computedAt: IsoDateTimeSchema,
+});
+
+export const CurrentMonthlyRoleSkillRequirementSchema = RoleSkillRequirementSchema.merge(
+  CurrentMonthlyVersionFieldsSchema,
+);
+
+export type CurrentMonthlyRoleSkillRequirement = z.infer<typeof CurrentMonthlyRoleSkillRequirementSchema>;
+
+export const CurrentMonthlySdiSnapshotSchema = SdiSnapshotSchema.merge(CurrentMonthlyVersionFieldsSchema);
+
+export type CurrentMonthlySdiSnapshot = z.infer<typeof CurrentMonthlySdiSnapshotSchema>;
+
+export const CurrentMonthlySkillDecaySignalSchema = SkillDecaySignalSchema.merge(
+  CurrentMonthlyVersionFieldsSchema,
+);
+
+export type CurrentMonthlySkillDecaySignal = z.infer<typeof CurrentMonthlySkillDecaySignalSchema>;
