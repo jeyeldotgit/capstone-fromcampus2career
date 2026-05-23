@@ -228,7 +228,7 @@ Admin uploads or registers CSV
 -> Python computes role skill requirements
 -> Python computes SDI snapshots
 -> Python detects skill decay signals
--> Python writes versioned outputs to Postgres
+-> Python writes versioned monthly outputs, dataset lineage, and month-scoped current pointers to Postgres
 -> Admin reviews results in dashboard
 ```
 
@@ -301,9 +301,10 @@ Reference data:
 Prepared intelligence data:
 
 - student skill profiles
-- role skill requirements
-- SDI snapshots
-- skill decay signals
+- role skill requirements by immutable requirement version and monthly revision
+- SDI snapshots by requirement version so same-month republishes can coexist
+- skill decay signals whose active state is scoped to the requirement version's month
+- dataset lineage rows for each published role requirement version
 - role search indexes
 - cached analysis results
 
@@ -391,7 +392,7 @@ The application should continue serving students even if the data pipeline is te
 Failure handling rules:
 
 - If Python pipeline fails, keep serving the latest successful prepared data.
-- If role requirements are stale, show the latest available version with freshness metadata where needed.
+- If role requirements are stale, show the latest current monthly version with freshness and period metadata where needed.
 - If cache is unavailable, fall back to database reads.
 - If LLM enrichment fails, use deterministic or template-based explanations.
 - If dataset ingestion fails, record the failure and expose it to admins.
@@ -573,6 +574,7 @@ Contract strategy:
 
 - Supabase Postgres is the single source of truth.
 - Python publishes immutable, versioned market-intelligence outputs.
+- Python publishes immutable monthly market-intelligence outputs with explicit dataset lineage and one current pointer per `period_month`.
 - TypeScript consumes published outputs and owns user-facing mutations.
 - Shared request and response contracts must be defined once and reused across mobile, admin, and API.
 

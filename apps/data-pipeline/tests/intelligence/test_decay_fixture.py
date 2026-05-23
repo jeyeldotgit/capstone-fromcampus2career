@@ -141,14 +141,28 @@ def _seed_decay_fixture(connection: Connection) -> list[int]:
         connection.execute(
             text(
                 """
-                insert into role_requirement_versions (version, dataset_id, is_current)
-                values (:version, :dataset_id, :is_current)
+                insert into role_requirement_versions (
+                    version,
+                    dataset_id,
+                    period_month,
+                    period_revision,
+                    is_current
+                )
+                values (
+                    :version,
+                    :dataset_id,
+                    :period_month,
+                    :period_revision,
+                    :is_current
+                )
                 """
             ),
             {
                 "version": version,
                 "dataset_id": dataset_id,
-                "is_current": version == versions[-1],
+                "period_month": snapshot_date,
+                "period_revision": version,
+                "is_current": False,
             },
         )
         connection.execute(
@@ -245,6 +259,8 @@ def _bootstrap_schema(engine: Engine) -> None:
             _run_migration(connection, "20260504110000_p1_s03_prepared_intelligence.sql")
         if not _column_exists(connection, "role_requirement_versions", "is_current"):
             _run_migration(connection, "20260518120000_align_role_requirement_publish_contract.sql")
+        if not _column_exists(connection, "role_requirement_versions", "period_month"):
+            _run_migration(connection, "20260523120000_monthly_versioning_and_lineage.sql")
 
 
 def _run_migration(connection: Connection, migration_name: str) -> None:

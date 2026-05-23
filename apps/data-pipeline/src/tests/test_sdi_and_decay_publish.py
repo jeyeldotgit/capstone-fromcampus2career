@@ -53,8 +53,8 @@ def test_sdi_output_is_deterministic_and_publish_is_idempotent(connection: Conne
     _insert_job_posting_skill_fixture(connection, seed)
     rows = _sdi_input_rows(seed)
 
-    first = compute_sdi(rows, snapshot_date=date(2026, 5, 19))
-    second = compute_sdi(rows, snapshot_date=date(2026, 5, 19))
+    first = compute_sdi(rows, snapshot_date=date(2026, 5, 1))
+    second = compute_sdi(rows, snapshot_date=date(2026, 5, 1))
 
     assert first == second
     assert all(0.0 <= row.demand_index <= 1.0 for row in first)
@@ -64,7 +64,7 @@ def test_sdi_output_is_deterministic_and_publish_is_idempotent(connection: Conne
             role_id=row.role_id,
             skill_id=row.skill_id,
             demand_index=row.demand_index,
-            snapshot_date=date(2026, 5, 19),
+            snapshot_date=date(2026, 5, 1),
             requirement_version=seed.requirement_version,
         )
         for row in first
@@ -94,7 +94,7 @@ def test_sdi_same_day_rerun_with_differing_value_raises_conflict(connection: Con
         role_id=seed.role_id,
         skill_id=seed.skill_ids[0],
         demand_index=0.5,
-        snapshot_date=date(2026, 5, 19),
+        snapshot_date=date(2026, 5, 1),
         requirement_version=seed.requirement_version,
     )
 
@@ -202,13 +202,16 @@ def test_decay_publish_deactivates_prior_active_rows(connection: Connection) -> 
     assert second_output_version == second_version
     assert _active_decay_count(connection, seed.role_id, seed.skill_ids[0]) == 1
     assert _all_decay_values_in_range(connection) is True
-    assert _published_decay_versions(connection) == [seed.requirement_version, second_version]
+    assert _published_decay_versions(connection, seed.role_id, seed.skill_ids[0]) == [
+        seed.requirement_version,
+        second_version,
+    ]
     assert _protected_table_counts(connection) == before_counts
 
 
 def test_published_sdi_demand_index_values_are_in_range(connection: Connection) -> None:
     seed = _seed_market_requirements(connection)
-    rows = compute_sdi(_sdi_input_rows(seed), snapshot_date=date(2026, 5, 19))
+    rows = compute_sdi(_sdi_input_rows(seed), snapshot_date=date(2026, 5, 1))
     publish_sdi_snapshots(
         requirement_version=seed.requirement_version,
         rows=[
@@ -216,7 +219,7 @@ def test_published_sdi_demand_index_values_are_in_range(connection: Connection) 
                 role_id=row.role_id,
                 skill_id=row.skill_id,
                 demand_index=row.demand_index,
-                snapshot_date=date(2026, 5, 19),
+                snapshot_date=date(2026, 5, 1),
                 requirement_version=seed.requirement_version,
             )
             for row in rows
@@ -236,7 +239,7 @@ def test_all_published_sdi_rows_have_valid_requirement_version(connection: Conne
                 role_id=seed.role_id,
                 skill_id=seed.skill_ids[0],
                 demand_index=0.5,
-                snapshot_date=date(2026, 5, 19),
+                snapshot_date=date(2026, 5, 1),
                 requirement_version=seed.requirement_version,
             )
         ],
@@ -252,7 +255,7 @@ def test_same_day_sdi_rerun_with_identical_values_produces_no_duplicate_rows(con
         role_id=seed.role_id,
         skill_id=seed.skill_ids[0],
         demand_index=0.5,
-        snapshot_date=date(2026, 5, 19),
+        snapshot_date=date(2026, 5, 1),
         requirement_version=seed.requirement_version,
     )
 
@@ -321,7 +324,7 @@ def test_all_published_decay_rows_have_valid_requirement_version(connection: Con
         connection=connection,
     )
 
-    assert _published_decay_versions(connection) == [seed.requirement_version]
+    assert _published_decay_versions(connection, seed.role_id, seed.skill_ids[0]) == [seed.requirement_version]
 
 
 def test_publish_entrypoints_return_non_null_output_version(connection: Connection) -> None:
@@ -334,7 +337,7 @@ def test_publish_entrypoints_return_non_null_output_version(connection: Connecti
                 role_id=seed.role_id,
                 skill_id=seed.skill_ids[0],
                 demand_index=0.5,
-                snapshot_date=date(2026, 5, 19),
+                snapshot_date=date(2026, 5, 1),
                 requirement_version=seed.requirement_version,
             )
         ],
@@ -372,7 +375,7 @@ def test_publish_paths_do_not_write_pipeline_jobs_or_app_events(connection: Conn
                 role_id=seed.role_id,
                 skill_id=seed.skill_ids[0],
                 demand_index=0.5,
-                snapshot_date=date(2026, 5, 19),
+                snapshot_date=date(2026, 5, 1),
                 requirement_version=seed.requirement_version,
             )
         ],
@@ -424,6 +427,8 @@ def _bootstrap_schema(engine: Engine) -> None:
             _run_migration(connection, "20260504110000_p1_s03_prepared_intelligence.sql")
         if not _column_exists(connection, "role_requirement_versions", "is_current"):
             _run_migration(connection, "20260518120000_align_role_requirement_publish_contract.sql")
+        if not _column_exists(connection, "role_requirement_versions", "period_month"):
+            _run_migration(connection, "20260523120000_monthly_versioning_and_lineage.sql")
         if not _table_exists(connection, "job_postings"):
             _run_migration(connection, "20260519120000_add_job_posting_skill_evidence.sql")
 
@@ -566,16 +571,46 @@ def _insert_requirement_version(
     *,
     is_current: bool,
 ) -> int:
+    if is_current:
+        connection.execute(
+            text(
+                """
+                update role_requirement_versions
+                set is_current = false
+                where period_month = date '2026-05-01'
+                  and is_current = true
+                """
+            )
+        )
+
     return int(
         connection.execute(
             text(
                 """
-                insert into role_requirement_versions (version, dataset_id, is_current)
-                values (:version, :dataset_id, :is_current)
+                insert into role_requirement_versions (
+                    version,
+                    dataset_id,
+                    period_month,
+                    period_revision,
+                    is_current
+                )
+                values (
+                    :version,
+                    :dataset_id,
+                    :period_month,
+                    :period_revision,
+                    :is_current
+                )
                 returning version
                 """
             ),
-            {"version": version, "dataset_id": dataset_id, "is_current": is_current},
+            {
+                "version": version,
+                "dataset_id": dataset_id,
+                "period_month": date(2026, 5, 1),
+                "period_revision": version,
+                "is_current": is_current,
+            },
         ).scalar_one()
     )
 
@@ -777,7 +812,7 @@ def _all_decay_values_in_range(connection: Connection) -> bool:
     )
 
 
-def _published_decay_versions(connection: Connection) -> list[int]:
+def _published_decay_versions(connection: Connection, role_id: UUID, skill_id: UUID) -> list[int]:
     return [
         int(value)
         for value in connection.execute(
@@ -785,8 +820,11 @@ def _published_decay_versions(connection: Connection) -> list[int]:
                 """
                 select distinct requirement_version
                 from skill_decay_signals
+                where role_id = :role_id
+                  and skill_id = :skill_id
                 order by requirement_version
                 """
-            )
+            ),
+            {"role_id": role_id, "skill_id": skill_id},
         ).scalars()
     ]

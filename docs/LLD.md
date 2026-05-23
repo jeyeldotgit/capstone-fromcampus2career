@@ -552,8 +552,16 @@ erDiagram
         uuid id PK
         int version
         uuid dataset_id FK
+        date period_month
+        int period_revision
         timestamptz computed_at
         boolean is_current
+    }
+
+    ROLE_REQUIREMENT_VERSION_DATASETS {
+        int requirement_version FK
+        uuid dataset_id FK
+        timestamptz linked_at
     }
 
     ROLE_SKILL_REQUIREMENTS {
@@ -695,7 +703,9 @@ erDiagram
     STUDENT_PROFILES ||--o{ STUDENT_SKILL_PROFILES : "produces"
     STUDENT_SKILL_PROFILES ||--o{ STUDENT_SKILL_PROFILE_ITEMS : "contains"
     SKILLS ||--o{ STUDENT_SKILL_PROFILE_ITEMS : "measured by"
-    MARKET_DATASETS ||--o{ ROLE_REQUIREMENT_VERSIONS : "produces"
+    MARKET_DATASETS ||--o{ ROLE_REQUIREMENT_VERSIONS : "triggers"
+    MARKET_DATASETS ||--o{ ROLE_REQUIREMENT_VERSION_DATASETS : "contributes to"
+    ROLE_REQUIREMENT_VERSIONS ||--o{ ROLE_REQUIREMENT_VERSION_DATASETS : "has lineage"
     ROLE_REQUIREMENT_VERSIONS ||--o{ ROLE_SKILL_REQUIREMENTS : "versions"
     CAREER_ROLES ||--o{ ROLE_SKILL_REQUIREMENTS : "requires"
     SKILLS ||--o{ ROLE_SKILL_REQUIREMENTS : "required skill"
@@ -890,8 +900,22 @@ role_requirement_versions
 - id uuid primary key
 - version int unique not null
 - dataset_id uuid references market_datasets(id)
+- period_month date not null
+- period_revision int not null
 - computed_at timestamptz not null
 - is_current boolean default false
+- unique(period_month, period_revision)
+- unique(period_month) where is_current = true
+- check(period_revision > 0)
+- check(date_trunc('month', period_month) = period_month)
+```
+
+```txt
+role_requirement_version_datasets
+- requirement_version int not null references role_requirement_versions(version)
+- dataset_id uuid not null references market_datasets(id)
+- linked_at timestamptz not null default now()
+- unique(requirement_version, dataset_id)
 ```
 
 ```txt
@@ -913,8 +937,8 @@ sdi_snapshots
 - skill_id uuid not null references skills(id)
 - demand_index numeric(5,4) not null
 - snapshot_date date not null
-- requirement_version int not null
-- unique(role_id, skill_id, snapshot_date)
+- requirement_version int not null references role_requirement_versions(version)
+- unique(role_id, skill_id, snapshot_date, requirement_version)
 ```
 
 ```txt
@@ -925,7 +949,7 @@ skill_decay_signals
 - decay_rate numeric(5,4) not null
 - confidence numeric(5,4) not null
 - detected_at timestamptz not null
-- requirement_version int not null
+- requirement_version int not null references role_requirement_versions(version)
 - is_active boolean default true
 ```
 
@@ -1045,12 +1069,14 @@ Suggested read models:
 
 - `student_readiness_summary`
 - `career_role_search_view`
-- `latest_role_skill_requirements`
+- `v_current_monthly_role_skill_requirements`
+- `v_current_monthly_sdi_snapshots`
+- `v_current_monthly_skill_decay_signals`
 - `latest_student_skill_profile`
 - `latest_skill_gap_result`
 - `admin_pipeline_job_summary`
 
-Example `latest_role_skill_requirements`:
+Example `v_current_monthly_role_skill_requirements`:
 
 ```txt
 role_id
@@ -1060,8 +1086,13 @@ skill_name
 required_depth
 demand_weight
 requirement_version
+period_month
+period_revision
+triggering_dataset_id
 computed_at
 ```
+
+The current monthly views join published output tables to `role_requirement_versions` on `requirement_version = version` and filter `is_current = true`. Historical reads query the base tables by `period_month`, `period_revision`, global `version`, or contributing `dataset_id` through `role_requirement_version_datasets`.
 
 Example `student_readiness_summary`:
 
@@ -1107,7 +1138,7 @@ Responsibilities:
 
 - validate target role
 - load current student skill profile
-- load current role requirements
+- load current role requirements from the month-scoped current version
 - reuse existing result when versions match
 - compute gap scores
 - compute readiness score
@@ -1183,7 +1214,7 @@ create pipeline_job
 -> compute role requirements
 -> compute SDI snapshots
 -> detect skill decay
--> publish output version
+-> publish output version, dataset lineage, SDI snapshots, and decay signals atomically for one period_month
 -> mark pipeline_job complete
 ```
 
@@ -1384,7 +1415,7 @@ Invalidation rules:
 - Career role or alias change invalidates role search cache.
 - Course or grade change invalidates the student's profile cache.
 - New student skill profile version invalidates old skill-gap cache for that student.
-- New role requirement version invalidates skill-gap cache for affected roles.
+- New current role requirement version invalidates skill-gap cache for affected roles and month by version mismatch.
 - Recommendation catalog changes invalidate roadmap cache.
 - Pipeline job updates invalidate admin pipeline cache.
 
@@ -1531,7 +1562,7 @@ Unit tests:
 Integration tests:
 
 - ingest sample CSV
-- publish role requirement version
+- publish monthly role requirement version with lineage
 - publish SDI snapshots
 - publish rejected rows
 - update pipeline job status
@@ -1633,7 +1664,7 @@ Invalidation rules:
 - course mutations invalidate profile, skill-profile, latest analysis, and roadmap families
 - role or alias admin updates invalidate `careers.search`
 - recommendation catalog updates invalidate roadmap families
-- new `role_requirement_versions` invalidate analysis reads by version mismatch
+- new current `role_requirement_versions` invalidate analysis reads by version mismatch within the relevant market month
 
 ## 21. Integration Boundaries
 

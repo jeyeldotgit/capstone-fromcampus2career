@@ -6,6 +6,7 @@ export default defineConfig({
     hookTimeout: 60000,
     include: [
       "src/__tests__/schema-prepared-intelligence.test.ts",
+      "src/tests/monthly-versioning.test.ts",
       "src/seeds/__tests__/**/*.test.ts",
     ],
     testTimeout: 60000,

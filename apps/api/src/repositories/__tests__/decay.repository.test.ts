@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { afterAll, describe, expect, test } from "vitest";
-import { careerRoles, skillDecaySignals, skills } from "@fcc/database";
+import { careerRoles, marketDatasets, roleRequirementVersions, skillDecaySignals, skills } from "@fcc/database";
 import { SkillDecaySignalSchema } from "@fcc/shared";
 import { __testing, getActiveDecaySignalsByRole } from "../decay.repository.js";
 
@@ -10,6 +10,7 @@ const DATABASE_URL = process.env.DATABASE_URL;
 const client = DATABASE_URL === undefined ? null : postgres(DATABASE_URL, { max: 1 });
 const db = client === null ? null : drizzle(client);
 const suite = db === null ? describe.skip : describe;
+let testVersion = 1_820_000_000;
 
 class RollbackTransaction extends Error {}
 
@@ -40,6 +41,16 @@ function token(): string {
   return randomUUID().replaceAll("-", "").slice(0, 12);
 }
 
+function nextTestVersion(): number {
+  testVersion += 1;
+  return testVersion;
+}
+
+function periodMonthForVersion(version: number): string {
+  const month = String((version % 12) + 1).padStart(2, "0");
+  return `${2400 + (version % 500)}-${month}-01`;
+}
+
 async function seedRole(tx: TestTransaction): Promise<string> {
   const idToken = token();
   const [row] = await tx
@@ -60,12 +71,38 @@ async function seedSkill(tx: TestTransaction): Promise<string> {
   return row.id;
 }
 
+async function seedRequirementVersion(tx: TestTransaction, periodRevision: number): Promise<number> {
+  const [dataset] = await tx
+    .insert(marketDatasets)
+    .values({
+      filePath: `p1-s12-decay-${token()}.csv`,
+      source: "p1-s12-decay-test",
+      status: "uploaded",
+    })
+    .returning({ id: marketDatasets.id });
+  const version = nextTestVersion();
+  const [row] = await tx
+    .insert(roleRequirementVersions)
+    .values({
+      datasetId: dataset.id,
+      version,
+      periodMonth: periodMonthForVersion(version),
+      periodRevision: version,
+      isCurrent: false,
+    })
+    .returning({ version: roleRequirementVersions.version });
+
+  return row.version;
+}
+
 suite("decay repository", () => {
   test("getActiveDecaySignalsByRole returns only rows where is_active = true", async () => {
     await withRollback(async (tx) => {
       const roleId = await seedRole(tx);
       const skillId = await seedSkill(tx);
       const inactiveSkillId = await seedSkill(tx);
+      const firstVersion = await seedRequirementVersion(tx, 1);
+      const secondVersion = await seedRequirementVersion(tx, 2);
 
       await tx.insert(skillDecaySignals).values([
         {
@@ -73,7 +110,7 @@ suite("decay repository", () => {
           skillId,
           decayRate: "0.2500",
           confidence: "0.9000",
-          requirementVersion: 1,
+          requirementVersion: firstVersion,
           isActive: true,
         },
         {
@@ -81,7 +118,7 @@ suite("decay repository", () => {
           skillId: inactiveSkillId,
           decayRate: "0.3000",
           confidence: "0.8000",
-          requirementVersion: 2,
+          requirementVersion: secondVersion,
           isActive: false,
         },
       ]);
@@ -94,7 +131,7 @@ suite("decay repository", () => {
         skillId,
         decayRate: 0.25,
         confidence: 0.9,
-        requirementVersion: 1,
+        requirementVersion: firstVersion,
         isActive: true,
       });
     });
@@ -104,13 +141,14 @@ suite("decay repository", () => {
     await withRollback(async (tx) => {
       const roleId = await seedRole(tx);
       const skillId = await seedSkill(tx);
+      const version = await seedRequirementVersion(tx, 3);
 
       await tx.insert(skillDecaySignals).values({
         roleId,
         skillId,
         decayRate: "0.1000",
         confidence: "1.0000",
-        requirementVersion: 3,
+        requirementVersion: version,
         isActive: true,
       });
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from datetime import date
 from pathlib import Path
 import sys
 from uuid import UUID, uuid4
@@ -105,6 +106,7 @@ def test_aggregate_tracks_cumulative_thresholds_and_publish_filters(connection: 
     new_version = publish_role_requirements(
         dataset_id=dataset_id,
         requirements=publish_rows,
+        period_month=date(2026, 5, 1),
         connection=connection,
     )
 
@@ -121,10 +123,12 @@ def test_aggregate_tracks_cumulative_thresholds_and_publish_filters(connection: 
 
 def test_successful_publish_flips_previous_current_version(connection: Connection) -> None:
     previous_dataset_id = _insert_dataset(connection)
+    period_month = date(2026, 9, 1)
     previous_version = _insert_requirement_version(
         connection,
         dataset_id=previous_dataset_id,
-        version=1,
+        version=_next_requirement_version(connection),
+        period_month=period_month,
         is_current=True,
     )
     dataset_id = _insert_dataset(connection)
@@ -142,6 +146,7 @@ def test_successful_publish_flips_previous_current_version(connection: Connectio
                 evidence_count=5,
             )
         ],
+        period_month=period_month,
         connection=connection,
     )
 
@@ -166,6 +171,7 @@ def test_publisher_returns_inserted_version_integer(connection: Connection) -> N
                 evidence_count=6,
             )
         ],
+        period_month=date(2026, 5, 1),
         connection=connection,
     )
 
@@ -210,6 +216,7 @@ def test_invalid_role_fk_rolls_back_failed_publish(connection: Connection) -> No
     dataset_id = _insert_dataset(connection)
     skill_id = _insert_skill(connection)
     versions_before = _count_versions(connection)
+    current_versions_before = _count_current_versions(connection)
     savepoint = connection.begin_nested()
 
     try:
@@ -225,6 +232,7 @@ def test_invalid_role_fk_rolls_back_failed_publish(connection: Connection) -> No
                         evidence_count=5,
                     )
                 ],
+                period_month=date(2026, 5, 1),
                 connection=connection,
             )
     finally:
@@ -232,7 +240,7 @@ def test_invalid_role_fk_rolls_back_failed_publish(connection: Connection) -> No
             savepoint.rollback()
 
     assert _count_versions(connection) == versions_before
-    assert _count_current_versions(connection) == 0
+    assert _count_current_versions(connection) == current_versions_before
 
 
 def test_duplicate_evidence_summary_insert_raises_constraint_error(connection: Connection) -> None:
@@ -303,6 +311,8 @@ def _bootstrap_schema(engine: Engine) -> None:
             _run_migration(connection, "20260504110000_p1_s03_prepared_intelligence.sql")
         if not _column_exists(connection, "role_requirement_versions", "is_current"):
             _run_migration(connection, "20260518120000_align_role_requirement_publish_contract.sql")
+        if not _column_exists(connection, "role_requirement_versions", "period_month"):
+            _run_migration(connection, "20260523120000_monthly_versioning_and_lineage.sql")
         if not _table_exists(connection, "pipeline_skill_evidence_summary"):
             _run_migration(connection, "20260511120000_add_pipeline_skill_evidence_summary.sql")
 
@@ -429,20 +439,35 @@ def _insert_requirement_version(
     *,
     dataset_id: UUID,
     version: int,
+    period_month: date = date(2026, 5, 1),
     is_current: bool,
 ) -> int:
     return int(
         connection.execute(
             text(
                 """
-                insert into role_requirement_versions (version, dataset_id, is_current)
-                values (:version, :dataset_id, :is_current)
+                insert into role_requirement_versions (
+                    version,
+                    dataset_id,
+                    period_month,
+                    period_revision,
+                    is_current
+                )
+                values (
+                    :version,
+                    :dataset_id,
+                    :period_month,
+                    :period_revision,
+                    :is_current
+                )
                 returning version
                 """
             ),
             {
                 "version": version,
                 "dataset_id": dataset_id,
+                "period_month": period_month,
+                "period_revision": version,
                 "is_current": is_current,
             },
         ).scalar_one()
@@ -514,6 +539,14 @@ def _mapped_rows(
 
 def _count_versions(connection: Connection) -> int:
     return int(connection.execute(text("select count(*) from role_requirement_versions")).scalar_one())
+
+
+def _next_requirement_version(connection: Connection) -> int:
+    return int(
+        connection.execute(
+            text("select coalesce(max(version), 0) + 1 from role_requirement_versions")
+        ).scalar_one()
+    )
 
 
 def _count_current_versions(connection: Connection) -> int:

@@ -10,6 +10,7 @@ const DATABASE_URL = process.env.DATABASE_URL;
 const client = DATABASE_URL === undefined ? null : postgres(DATABASE_URL, { max: 1 });
 const db = client === null ? null : drizzle(client);
 const suite = db === null ? describe.skip : describe;
+let testVersion = 1_810_000_000;
 
 class RollbackTransaction extends Error {}
 
@@ -38,6 +39,16 @@ async function withRollback(run: (tx: TestTransaction) => Promise<void>): Promis
 
 function token(): string {
   return randomUUID().replaceAll("-", "").slice(0, 12);
+}
+
+function nextTestVersion(): number {
+  testVersion += 1;
+  return testVersion;
+}
+
+function periodMonthForVersion(version: number): string {
+  const month = String((version % 12) + 1).padStart(2, "0");
+  return `${2300 + (version % 500)}-${month}-01`;
 }
 
 async function seedRole(tx: TestTransaction): Promise<string> {
@@ -69,10 +80,16 @@ async function seedRequirementVersion(tx: TestTransaction): Promise<number> {
       status: "uploaded",
     })
     .returning({ id: marketDatasets.id });
-  const version = Math.floor(Math.random() * 1_000_000_000) + 1;
+  const version = nextTestVersion();
   const [row] = await tx
     .insert(roleRequirementVersions)
-    .values({ datasetId: dataset.id, version, isCurrent: false })
+    .values({
+      datasetId: dataset.id,
+      version,
+      periodMonth: periodMonthForVersion(version),
+      periodRevision: version,
+      isCurrent: false,
+    })
     .returning({ version: roleRequirementVersions.version });
 
   return row.version;
