@@ -4,6 +4,7 @@ import argparse
 from collections import defaultdict
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -31,7 +32,7 @@ from src.ingestion.validator import read_csv_rows, validate_rows
 from src.intelligence.alias_lookup import SkillLookupItem, build_alias_lookup, load_skill_alias_rows, normalize_signal
 from src.intelligence.decay import HistoricalSdiSnapshotRow, detect_decay_signals
 from src.intelligence.role_requirement_aggregator import aggregate_role_requirements
-from src.intelligence.sdi import compute_sdi, load_sdi_posting_skill_rows
+from src.intelligence.sdi import SdiPostingSkillInputRow, compute_sdi
 from src.intelligence.skill_mapper import map_skills
 from src.main import PipelineResult, run_pipeline_job
 from src.normalization.role_hint_normalizer import normalize_role_hint
@@ -50,6 +51,12 @@ class RunnerExecutionError(RunnerError):
     def __init__(self, report_text: str) -> None:
         super().__init__("local pipeline runner failed")
         self.report_text = report_text
+
+
+@dataclass(frozen=True)
+class JobPostingUpsertResult:
+    posting_id: UUID
+    inserted: bool
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -174,6 +181,7 @@ def _run_pipeline_in_connection(
         skill_name_lookup = _load_skill_name_lookup(connection)
         role_totals: dict[UUID, set[UUID]] = defaultdict(set)
         mapped_rows: list[MappedRoleSkillRow] = []
+        posting_dates_by_id: dict[UUID, date] = {}
 
         for posting in deduplicated_rows:
             role_hint = source_role_hints_by_external_id.get(posting.external_id) or posting.normalized_role_hint
@@ -184,32 +192,41 @@ def _run_pipeline_in_connection(
                 continue
 
             counters.rows_matched_to_canonical_role += 1
-            posting_id = _insert_job_posting(
+            posting_result = _insert_or_get_job_posting(
                 connection=connection,
                 dataset_id=dataset_id,
                 role_id=role_id,
                 posting=posting,
             )
-            mapping_posting = posting.model_copy(update={"external_id": str(posting_id)})
+            if posting_result.inserted:
+                counters.job_postings_inserted += 1
+            else:
+                counters.job_postings_reused_existing += 1
+            posting_dates_by_id[posting_result.posting_id] = posting.posted_at
+            mapping_posting = posting.model_copy(update={"external_id": str(posting_result.posting_id)})
             mapping_result = map_skills(
                 posting=mapping_posting,
                 alias_lookup=skill_alias_lookup,
                 skill_name_lookup=skill_name_lookup,
             )
             unique_mapped_skills = _deduplicate_mapped_skills(mapping_result.mapped)
-            role_totals[role_id].add(posting_id)
+            role_totals[role_id].add(posting_result.posting_id)
             counters.skill_matches_produced += len(unique_mapped_skills)
             for mapped_skill in unique_mapped_skills:
-                _insert_job_posting_skill(
+                inserted_skill = _insert_job_posting_skill(
                     connection=connection,
-                    posting_id=posting_id,
+                    posting_id=posting_result.posting_id,
                     role_id=role_id,
                     skill_id=mapped_skill.skill_id,
                     normalized_depth=0.8,
                 )
+                if inserted_skill:
+                    counters.job_posting_skills_inserted += 1
+                else:
+                    counters.job_posting_skills_reused_existing += 1
                 mapped_rows.append(
                     MappedRoleSkillRow(
-                        job_posting_id=posting_id,
+                        job_posting_id=posting_result.posting_id,
                         role_id=role_id,
                         skill_id=mapped_skill.skill_id,
                         normalized_depth=0.8,
@@ -244,10 +261,15 @@ def _run_pipeline_in_connection(
         )
         counters.role_skill_requirements_rows_published = len(aggregates)
 
-        sdi_input_rows = load_sdi_posting_skill_rows(
+        required_pairs = _load_required_role_skill_pairs(
             connection=connection,
-            dataset_id=dataset_id,
             requirement_version=output_version,
+        )
+        sdi_input_rows = _prepare_sdi_input_rows(
+            dataset_id=dataset_id,
+            mapped_rows=mapped_rows,
+            posting_dates_by_id=posting_dates_by_id,
+            required_pairs=required_pairs,
         )
         snapshot_date = resolved_period_month
         sdi_rows = compute_sdi(sdi_input_rows, snapshot_date=snapshot_date)
@@ -422,53 +444,78 @@ def _load_skill_name_lookup(connection: Connection) -> dict[str, SkillLookupItem
     }
 
 
-def _insert_job_posting(
+def _insert_or_get_job_posting(
     *,
     connection: Connection,
     dataset_id: UUID,
     role_id: UUID,
     posting: NormalizedJobPosting,
-) -> UUID:
-    return UUID(
-        str(
-            connection.execute(
-                text(
-                    """
-                    insert into job_postings (
-                        dataset_id,
-                        source,
-                        title,
-                        company,
-                        raw_text,
-                        role_id,
-                        posted_at,
-                        ingested_at
-                    )
-                    values (
-                        :dataset_id,
-                        :source,
-                        :title,
-                        :company,
-                        :raw_text,
-                        :role_id,
-                        :posted_at,
-                        :ingested_at
-                    )
-                    returning id
-                    """
-                ),
-                {
-                    "dataset_id": dataset_id,
-                    "source": posting.normalized_source,
-                    "title": posting.normalized_title,
-                    "company": posting.normalized_company,
-                    "raw_text": posting.normalized_description,
-                    "role_id": role_id,
-                    "posted_at": posting.posted_at,
-                    "ingested_at": posting.ingested_at,
-                },
-            ).scalar_one()
+) -> JobPostingUpsertResult:
+    row = connection.execute(
+        text(
+            """
+            with inserted as (
+                insert into job_postings (
+                    dataset_id,
+                    source,
+                    title,
+                    company,
+                    raw_text,
+                    role_id,
+                    posted_at,
+                    ingested_at
+                )
+                values (
+                    :dataset_id,
+                    :source,
+                    :title,
+                    :company,
+                    :raw_text,
+                    :role_id,
+                    :posted_at,
+                    :ingested_at
+                )
+                on conflict on constraint job_postings_source_title_company_posted_at_unique
+                do nothing
+                returning id, role_id, true as inserted
+            )
+            select id, role_id, inserted
+            from inserted
+            union all
+            select existing.id, existing.role_id, false as inserted
+            from job_postings existing
+            where existing.source = :source
+              and existing.title = :title
+              and existing.company = :company
+              and existing.posted_at = :posted_at
+              and not exists (select 1 from inserted)
+            limit 1
+            """
+        ),
+        {
+            "dataset_id": dataset_id,
+            "source": posting.normalized_source,
+            "title": posting.normalized_title,
+            "company": posting.normalized_company,
+            "raw_text": posting.normalized_description,
+            "role_id": role_id,
+            "posted_at": posting.posted_at,
+            "ingested_at": posting.ingested_at,
+        },
+    ).mappings().one()
+
+    existing_role_id = UUID(str(row["role_id"]))
+    if existing_role_id != role_id:
+        raise RunnerError(
+            "duplicate posting key resolved to existing row with a different role_id: "
+            f"expected={role_id} existing={existing_role_id} "
+            f"source='{posting.normalized_source}' title='{posting.normalized_title}' "
+            f"company='{posting.normalized_company}' posted_at={posting.posted_at}"
         )
+
+    return JobPostingUpsertResult(
+        posting_id=UUID(str(row["id"])),
+        inserted=bool(row["inserted"]),
     )
 
 
@@ -479,8 +526,8 @@ def _insert_job_posting_skill(
     role_id: UUID,
     skill_id: UUID,
     normalized_depth: float,
-) -> None:
-    connection.execute(
+) -> bool:
+    inserted_id = connection.execute(
         text(
             """
             insert into job_posting_skills (
@@ -495,6 +542,9 @@ def _insert_job_posting_skill(
                 :skill_id,
                 :normalized_depth
             )
+            on conflict on constraint job_posting_skills_posting_role_skill_unique
+            do nothing
+            returning id
             """
         ),
         {
@@ -503,7 +553,8 @@ def _insert_job_posting_skill(
             "skill_id": skill_id,
             "normalized_depth": normalized_depth,
         },
-    )
+    ).scalar_one_or_none()
+    return inserted_id is not None
 
 
 def _deduplicate_mapped_skills(mapped_skills: list[MappedSkillItem]) -> list[MappedSkillItem]:
@@ -545,6 +596,66 @@ def _load_decay_input_rows(
                     requirement_version=int(row["requirement_version"]),
                 )
             )
+    return rows
+
+
+def _load_required_role_skill_pairs(
+    *,
+    connection: Connection,
+    requirement_version: int,
+) -> set[tuple[UUID, UUID]]:
+    return {
+        (UUID(str(row["role_id"])), UUID(str(row["skill_id"])))
+        for row in connection.execute(
+            text(
+                """
+                select role_id, skill_id
+                from role_skill_requirements
+                where requirement_version = :requirement_version
+                """
+            ),
+            {"requirement_version": requirement_version},
+        ).mappings()
+    }
+
+
+def _prepare_sdi_input_rows(
+    *,
+    dataset_id: UUID,
+    mapped_rows: list[MappedRoleSkillRow],
+    posting_dates_by_id: dict[UUID, date],
+    required_pairs: set[tuple[UUID, UUID]],
+) -> list[SdiPostingSkillInputRow]:
+    rows: list[SdiPostingSkillInputRow] = []
+    seen_posting_role_skill: set[tuple[UUID, UUID, UUID]] = set()
+    for mapped_row in mapped_rows:
+        pair = (mapped_row.role_id, mapped_row.skill_id)
+        if pair not in required_pairs:
+            continue
+        posting_role_skill = (
+            mapped_row.job_posting_id,
+            mapped_row.role_id,
+            mapped_row.skill_id,
+        )
+        if posting_role_skill in seen_posting_role_skill:
+            continue
+        seen_posting_role_skill.add(posting_role_skill)
+        posted_at = posting_dates_by_id.get(mapped_row.job_posting_id)
+        if posted_at is None:
+            raise RunnerError(
+                f"missing posted_at for mapped posting id {mapped_row.job_posting_id} while preparing SDI input"
+            )
+        rows.append(
+            SdiPostingSkillInputRow(
+                job_posting_id=mapped_row.job_posting_id,
+                dataset_id=dataset_id,
+                role_id=mapped_row.role_id,
+                skill_id=mapped_row.skill_id,
+                posted_at=posted_at,
+            )
+        )
+
+    rows.sort(key=lambda row: (str(row.role_id), str(row.skill_id), row.posted_at, str(row.job_posting_id)))
     return rows
 
 
