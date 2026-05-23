@@ -60,6 +60,7 @@ def main(argv: list[str] | None = None) -> int:
             csv_path=args.csv_path,
             source=args.source,
             dry_run=dry_run,
+            period_month=args.period_month,
         )
     except RunnerExecutionError as error:
         print(error.report_text)
@@ -82,10 +83,17 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def run_local_pipeline(*, csv_path: Path, source: str, dry_run: bool = True) -> str:
+def run_local_pipeline(
+    *,
+    csv_path: Path,
+    source: str,
+    dry_run: bool = True,
+    period_month: date | None = None,
+) -> str:
     if source not in SUPPORTED_SOURCES:
         raise RunnerError(f"unsupported source '{source}'; expected one of {', '.join(SUPPORTED_SOURCES)}")
 
+    resolved_period_month = _validate_period_month(period_month) if period_month is not None else None
     engine = db.get_engine()
     connection = engine.connect()
     transaction = connection.begin()
@@ -96,6 +104,7 @@ def run_local_pipeline(*, csv_path: Path, source: str, dry_run: bool = True) -> 
                 connection=connection,
                 csv_path=csv_path,
                 source=source,
+                period_month=resolved_period_month,
             )
         if should_commit:
             transaction.commit()
@@ -109,7 +118,13 @@ def run_local_pipeline(*, csv_path: Path, source: str, dry_run: bool = True) -> 
         connection.close()
 
 
-def _run_pipeline_in_connection(*, connection: Connection, csv_path: Path, source: str) -> str:
+def _run_pipeline_in_connection(
+    *,
+    connection: Connection,
+    csv_path: Path,
+    source: str,
+    period_month: date | None,
+) -> str:
     source_rows = read_csv_rows(csv_path)
     counters = SmokeReportCounters(rows_read_from_source_csv=len(source_rows))
     validation_rejection_reasons: list[str] = []
@@ -220,9 +235,11 @@ def _run_pipeline_in_connection(*, connection: Connection, csv_path: Path, sourc
             job_id,
         )
 
+        resolved_period_month = period_month or _period_month_from_rows(valid_rows)
         output_version = publish_role_requirements(
             dataset_id=dataset_id,
             requirements=aggregates,
+            period_month=resolved_period_month,
             connection=connection,
         )
         counters.role_skill_requirements_rows_published = len(aggregates)
@@ -232,7 +249,7 @@ def _run_pipeline_in_connection(*, connection: Connection, csv_path: Path, sourc
             dataset_id=dataset_id,
             requirement_version=output_version,
         )
-        snapshot_date = _snapshot_date(valid_rows)
+        snapshot_date = resolved_period_month
         sdi_rows = compute_sdi(sdi_input_rows, snapshot_date=snapshot_date)
         publish_sdi_snapshots(
             requirement_version=output_version,
@@ -314,6 +331,11 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run a local Phase 1 pipeline smoke test.")
     parser.add_argument("--csv-path", type=Path, required=True, help="Path to the source CSV file.")
     parser.add_argument("--source", choices=SUPPORTED_SOURCES, required=True, help="Source adapter to use.")
+    parser.add_argument(
+        "--period-month",
+        type=_parse_period_month,
+        help="Month-start period for published intelligence, formatted as YYYY-MM-01.",
+    )
     mode_group = parser.add_mutually_exclusive_group()
     mode_group.add_argument(
         "--dry-run",
@@ -563,10 +585,30 @@ def _load_pipeline_job_status(*, connection: Connection, job_id: UUID) -> str:
     return status
 
 
-def _snapshot_date(rows: list[Any]) -> date:
+def _period_month_from_rows(rows: list[Any]) -> date:
     if len(rows) == 0:
-        return date.today()
-    return max(row.posted_at for row in rows)
+        today = date.today()
+        return date(today.year, today.month, 1)
+    latest_posted_at = max(row.posted_at for row in rows)
+    return date(latest_posted_at.year, latest_posted_at.month, 1)
+
+
+def _parse_period_month(value: str) -> date:
+    try:
+        parsed = date.fromisoformat(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError("period_month must be formatted as YYYY-MM-01") from error
+
+    try:
+        return _validate_period_month(parsed)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(str(error)) from error
+
+
+def _validate_period_month(value: date) -> date:
+    if value.day != 1:
+        raise ValueError("period_month must be the first day of the month")
+    return value
 
 
 def _to_error_message(error: Exception) -> str:

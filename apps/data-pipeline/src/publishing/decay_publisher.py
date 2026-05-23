@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import date
+
 from sqlalchemy import Connection, text
 
 from src.contracts.skill_decay_signal import SkillDecaySignalPublishRow
@@ -38,7 +40,10 @@ def _publish_with_connection(
     requirement_version: int,
     rows: list[SkillDecaySignalPublishRow],
 ) -> int:
-    _ensure_requirement_version_exists(connection=connection, requirement_version=requirement_version)
+    period_month = _load_requirement_period_month(
+        connection=connection,
+        requirement_version=requirement_version,
+    )
 
     for row in rows:
         connection.execute(
@@ -46,14 +51,18 @@ def _publish_with_connection(
                 """
                 update skill_decay_signals
                 set is_active = false
+                from role_requirement_versions versions
                 where role_id = :role_id
                   and skill_id = :skill_id
                   and is_active = true
+                  and versions.version = skill_decay_signals.requirement_version
+                  and versions.period_month = :period_month
                 """
             ),
             {
                 "role_id": row.role_id,
                 "skill_id": row.skill_id,
+                "period_month": period_month,
             },
         )
         connection.execute(
@@ -93,24 +102,23 @@ def _publish_with_connection(
     return requirement_version
 
 
-def _ensure_requirement_version_exists(
+def _load_requirement_period_month(
     *,
     connection: Connection,
     requirement_version: int,
-) -> None:
-    exists = connection.execute(
+) -> date:
+    period_month = connection.execute(
         text(
             """
-            select exists (
-                select 1
-                from role_requirement_versions
-                where version = :requirement_version
-            )
+            select period_month
+            from role_requirement_versions
+            where version = :requirement_version
             """
         ),
         {"requirement_version": requirement_version},
-    ).scalar_one()
-    if not exists:
+    ).scalar_one_or_none()
+    if period_month is None:
         raise RequirementVersionNotFoundError(
             f"role_requirement_versions row not found for version={requirement_version}"
         )
+    return period_month

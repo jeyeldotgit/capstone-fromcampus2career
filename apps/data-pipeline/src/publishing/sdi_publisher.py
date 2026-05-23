@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date
 from uuid import UUID
 
 from sqlalchemy import Connection, text
@@ -47,37 +48,41 @@ def _publish_with_connection(
     requirement_version: int,
     rows: list[SdiSnapshotPublishRow],
 ) -> int:
-    _ensure_requirement_version_exists(connection=connection, requirement_version=requirement_version)
+    period_month = _load_requirement_period_month(
+        connection=connection,
+        requirement_version=requirement_version,
+    )
 
     for row in rows:
+        if row.snapshot_date != period_month:
+            raise ValueError("sdi snapshot_date must equal the requirement version period_month")
+
         existing = connection.execute(
             text(
                 """
-                select demand_index, requirement_version
+                select demand_index
                 from sdi_snapshots
                 where role_id = :role_id
                   and skill_id = :skill_id
                   and snapshot_date = :snapshot_date
+                  and requirement_version = :requirement_version
                 """
             ),
             {
                 "role_id": row.role_id,
                 "skill_id": row.skill_id,
                 "snapshot_date": row.snapshot_date,
+                "requirement_version": row.requirement_version,
             },
         ).mappings().one_or_none()
 
         if existing is not None:
             existing_demand_index = round(float(existing["demand_index"]), 4)
             incoming_demand_index = round(row.demand_index, 4)
-            existing_requirement_version = int(existing["requirement_version"])
-            if (
-                existing_demand_index == incoming_demand_index
-                and existing_requirement_version == row.requirement_version
-            ):
+            if existing_demand_index == incoming_demand_index:
                 continue
             raise ConflictError(
-                "sdi_snapshots already contains a differing row for role_id, skill_id, and snapshot_date"
+                "sdi_snapshots already contains a differing row for role_id, skill_id, snapshot_date, and requirement_version"
             )
 
         connection.execute(
@@ -111,24 +116,23 @@ def _publish_with_connection(
     return requirement_version
 
 
-def _ensure_requirement_version_exists(
+def _load_requirement_period_month(
     *,
     connection: Connection,
     requirement_version: int,
-) -> None:
-    exists = connection.execute(
+) -> date:
+    period_month = connection.execute(
         text(
             """
-            select exists (
-                select 1
-                from role_requirement_versions
-                where version = :requirement_version
-            )
+            select period_month
+            from role_requirement_versions
+            where version = :requirement_version
             """
         ),
         {"requirement_version": requirement_version},
-    ).scalar_one()
-    if not exists:
+    ).scalar_one_or_none()
+    if period_month is None:
         raise RequirementVersionNotFoundError(
             f"role_requirement_versions row not found for version={requirement_version}"
         )
+    return period_month
