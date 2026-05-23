@@ -34,6 +34,7 @@ const CAN_RUN = Boolean(DATABASE_URL) && (PSQL_AVAILABLE || USE_DOCKER_PSQL);
 
 const REQUIRED_TABLES = [
   "role_requirement_versions",
+  "role_requirement_version_datasets",
   "role_skill_requirements",
   "sdi_snapshots",
   "skill_decay_signals",
@@ -42,7 +43,13 @@ const REQUIRED_TABLES = [
 const REQUIRED_CONSTRAINTS = [
   "role_requirement_versions_dataset_id_fkey",
   "role_requirement_versions_version_unique",
+  "role_requirement_versions_period_month_revision_unique",
+  "role_requirement_versions_period_revision_positive_chk",
+  "role_requirement_versions_period_month_start_chk",
   "role_requirement_versions_version_positive_chk",
+  "role_requirement_version_datasets_requirement_version_fkey",
+  "role_requirement_version_datasets_dataset_id_fkey",
+  "role_requirement_version_datasets_version_dataset_unique",
   "role_skill_requirements_role_id_fkey",
   "role_skill_requirements_skill_id_fkey",
   "role_skill_requirements_requirement_version_fkey",
@@ -52,16 +59,20 @@ const REQUIRED_CONSTRAINTS = [
   "role_skill_requirements_evidence_count_min_chk",
   "sdi_snapshots_role_id_fkey",
   "sdi_snapshots_skill_id_fkey",
-  "sdi_snapshots_role_skill_snapshot_date_unique",
+  "sdi_snapshots_requirement_version_fkey",
+  "sdi_snapshots_role_skill_snapshot_version_unique",
   "sdi_snapshots_demand_index_range_chk",
   "skill_decay_signals_role_id_fkey",
   "skill_decay_signals_skill_id_fkey",
+  "skill_decay_signals_requirement_version_fkey",
   "skill_decay_signals_role_skill_version_unique",
   "skill_decay_signals_decay_rate_range_chk",
   "skill_decay_signals_confidence_range_chk",
 ] as const;
 
 const REQUIRED_INDEXES = [
+  "role_requirement_versions_current_period_month_unique",
+  "role_requirement_version_datasets_dataset_id_idx",
   "role_skill_requirements_role_version_idx",
   "role_skill_requirements_skill_version_idx",
   "sdi_snapshots_role_snapshot_date_idx",
@@ -83,6 +94,11 @@ const PREPARED_INTELLIGENCE_MIGRATION_SQL = readFileSync(
 
 const ROLE_REQUIREMENT_PUBLISH_CONTRACT_MIGRATION_SQL = readFileSync(
   new URL("../../migrations/20260518120000_align_role_requirement_publish_contract.sql", import.meta.url),
+  "utf8",
+);
+
+const MONTHLY_VERSIONING_MIGRATION_SQL = readFileSync(
+  new URL("../../migrations/20260523120000_monthly_versioning_and_lineage.sql", import.meta.url),
   "utf8",
 );
 
@@ -217,12 +233,15 @@ function insertSkill(): string {
 
 function insertRequirementVersion(): string {
   const datasetId = insertDataset();
+  const version = Number(runSql(`select floor(random() * 1000000 + 1)::integer;`));
 
   return runSql(`
-    insert into role_requirement_versions (version, dataset_id)
+    insert into role_requirement_versions (version, dataset_id, period_month, period_revision)
     values (
-      floor(random() * 1000000 + 1)::integer,
-      '${datasetId}'::uuid
+      ${version},
+      '${datasetId}'::uuid,
+      date '2026-01-01',
+      ${version}
     )
     returning version::text;
   `);
@@ -242,6 +261,10 @@ suite("P1-S03 prepared intelligence schema migration", () => {
 
     if (!columnExists("role_requirement_versions", "is_current")) {
       runSql(ROLE_REQUIREMENT_PUBLISH_CONTRACT_MIGRATION_SQL);
+    }
+
+    if (!columnExists("role_requirement_versions", "period_month")) {
+      runSql(MONTHLY_VERSIONING_MIGRATION_SQL);
     }
   });
 
@@ -282,10 +305,12 @@ suite("P1-S03 prepared intelligence schema migration", () => {
   test("accepts a valid role_requirement_versions row", () => {
     const datasetId = insertDataset();
     const insertedVersion = runSql(`
-      insert into role_requirement_versions (version, dataset_id)
+      insert into role_requirement_versions (version, dataset_id, period_month, period_revision)
       values (
         floor(random() * 1000000 + 1)::integer,
-        '${datasetId}'::uuid
+        '${datasetId}'::uuid,
+        date '2026-02-01',
+        floor(random() * 1000000 + 1)::integer
       )
       returning version::text;
     `);
@@ -296,10 +321,12 @@ suite("P1-S03 prepared intelligence schema migration", () => {
   test("defaults role_requirement_versions.is_current to false", () => {
     const datasetId = insertDataset();
     const isCurrent = runSql(`
-      insert into role_requirement_versions (version, dataset_id)
+      insert into role_requirement_versions (version, dataset_id, period_month, period_revision)
       values (
         floor(random() * 1000000 + 1)::integer,
-        '${datasetId}'::uuid
+        '${datasetId}'::uuid,
+        date '2026-03-01',
+        floor(random() * 1000000 + 1)::integer
       )
       returning is_current::text;
     `);
@@ -312,13 +339,13 @@ suite("P1-S03 prepared intelligence schema migration", () => {
     const version = Number(runSql(`select floor(random() * 1000000 + 1)::integer;`));
 
     runSql(`
-      insert into role_requirement_versions (version, dataset_id)
-      values (${version}, '${datasetId}'::uuid);
+      insert into role_requirement_versions (version, dataset_id, period_month, period_revision)
+      values (${version}, '${datasetId}'::uuid, date '2026-04-01', ${version});
     `);
 
     const duplicateInsert = runSqlExpectFailure(`
-      insert into role_requirement_versions (version, dataset_id)
-      values (${version}, '${insertDataset()}'::uuid);
+      insert into role_requirement_versions (version, dataset_id, period_month, period_revision)
+      values (${version}, '${insertDataset()}'::uuid, date '2026-05-01', ${version} + 1);
     `);
 
     expect(duplicateInsert.status).not.toBe(0);
@@ -529,23 +556,24 @@ suite("P1-S03 prepared intelligence schema migration", () => {
     expect(insertedId).toMatch(/[0-9a-f-]{36}/i);
   });
 
-  test("rejects a duplicate sdi_snapshots role-skill-date tuple", () => {
+  test("accepts the same sdi_snapshots role-skill-date tuple across requirement versions", () => {
     const roleId = insertRole();
     const skillId = insertSkill();
     const requirementVersion = insertRequirementVersion();
+    const otherRequirementVersion = insertRequirementVersion();
 
     runSql(`
       insert into sdi_snapshots (role_id, skill_id, demand_index, snapshot_date, requirement_version)
       values ('${roleId}'::uuid, '${skillId}'::uuid, 0.65, date '2026-05-05', ${requirementVersion});
     `);
 
-    const duplicateInsert = runSqlExpectFailure(`
+    const insertedId = runSql(`
       insert into sdi_snapshots (role_id, skill_id, demand_index, snapshot_date, requirement_version)
-      values ('${roleId}'::uuid, '${skillId}'::uuid, 0.7, date '2026-05-05', ${requirementVersion} + 1);
+      values ('${roleId}'::uuid, '${skillId}'::uuid, 0.7, date '2026-05-05', ${otherRequirementVersion})
+      returning id;
     `);
 
-    expect(duplicateInsert.status).not.toBe(0);
-    expect(`${duplicateInsert.stderr}\n${duplicateInsert.stdout}`).toMatch(/unique constraint/i);
+    expect(insertedId).toMatch(/[0-9a-f-]{36}/i);
   });
 
   test("rejects an sdi_snapshots demand_index outside the 0.0 to 1.0 range", () => {

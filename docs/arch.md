@@ -126,6 +126,7 @@ The database is the single source of truth. Each domain concept has one authorit
 | Dataset registry | `market_datasets` |
 | Raw ingested market records | `job_postings` |
 | Published role requirement version header | `role_requirement_versions` |
+| Published role requirement dataset lineage | `role_requirement_version_datasets` |
 | Published role-skill requirements | `role_skill_requirements` |
 | Published market snapshots | `sdi_snapshots` |
 | Published decay signals | `skill_decay_signals` |
@@ -145,7 +146,7 @@ The database is the single source of truth. Each domain concept has one authorit
 - Admin-maintained reference data includes `skills`, `career_roles`, `courses`, `course_skills`, and `recommendation_catalog`.
 - Python owns versioned market-intelligence outputs and never writes student-owned tables.
 - TypeScript owns student-owned tables and never writes market-intelligence output tables except job bookkeeping tables.
-- Immutable versioned outputs are never updated in place except to flip current-version pointers or status flags.
+- Immutable versioned outputs are never updated in place except to flip month-scoped current-version pointers or status flags.
 
 ### Versioning Model
 
@@ -153,7 +154,10 @@ The system uses immutable snapshot versioning:
 
 - `student_profiles.profile_version` increments when academic inputs change.
 - `student_skill_profiles` stores one materialized profile per `student_id + profile_version`.
-- `role_requirement_versions.version` identifies one published market-intelligence release.
+- `role_requirement_versions.version` identifies one immutable published market-intelligence release.
+- `role_requirement_versions.period_month` and `period_revision` identify the monthly period and republish number for that month.
+- `role_requirement_versions.is_current` is scoped to `period_month`; multiple months may each have one current release.
+- `role_requirement_version_datasets` records all dataset lineage for a published version, while `role_requirement_versions.dataset_id` remains the triggering dataset.
 - `skill_gap_results` is unique on `student_id + role_id + profile_version + role_requirement_version`.
 - `roadmap_items` always reference the originating `analysis_result_id`.
 
@@ -274,7 +278,7 @@ Student taps Analyze
 -> API validates JWT and request schema
 -> API resolves student and target role
 -> API loads current student skill profile
--> API loads current role requirement version and role_skill_requirements
+-> API loads the current role requirement version for the relevant market period and role_skill_requirements
 -> API checks existing result by unique versioned key
 -> if result exists, return stored snapshot
 -> else compute readiness score and gap items
@@ -355,7 +359,7 @@ Cross-screen transient UI state may use Zustand.
 ### Invalidation Strategy
 
 - Course mutation invalidates student profile, skill profile, latest analysis, and roadmap query families.
-- New `role_requirement_versions.is_current = true` invalidates all skill-gap and roadmap caches by version mismatch, not by broad delete.
+- New `role_requirement_versions.is_current = true` invalidates skill-gap and roadmap caches for that month by version mismatch, not by broad delete.
 - Career role or alias update invalidates role search caches by incrementing a role index version value.
 - Recommendation catalog changes invalidate roadmap caches through `catalog_version`.
 
@@ -405,7 +409,7 @@ Cross-screen transient UI state may use Zustand.
 - Python jobs must be restart-safe and idempotent for the same `dataset_id + source_file_hash`.
 - Raw job text cleaning and normalization steps must preserve a traceable rejected-row reason when data is dropped.
 - New derived metrics must document formula, input columns, output range, and validation checks.
-- Publishing a new role requirement version must be atomic: either the version is fully published and marked current, or it is not current.
+- Publishing a new role requirement version must be atomic: either the version, lineage, role requirements, SDI snapshots, and decay signals are fully published and marked current for their `period_month`, or none of the publish is committed.
 
 ### Cross-Team Rules
 
@@ -421,6 +425,8 @@ Cross-screen transient UI state may use Zustand.
 - `required_depth` is normalized to the range `0.0` to `1.0`.
 - `demand_weight` is normalized to the range `0.1` to `1.0`.
 - A role-skill pair is published only when evidence count is at least `5`.
+- Re-publishing a month creates a new global `version` and increments `period_revision`; it only flips the current pointer for that same `period_month`.
+- Current monthly read surfaces resolve through `role_requirement_versions.is_current = true` and preserve historical versions for month, revision, version, and dataset-lineage queries.
 
 ### Initial SDI Formula
 
@@ -445,6 +451,8 @@ A skill is marked as decaying for a role when:
 - at least 3 snapshots exist,
 - the rolling SDI slope is below `-0.10`,
 - and confidence is at least `0.70`.
+
+`skill_decay_signals.is_active` means active for the signal's `period_month`, not globally active across all months.
 
 ## 10. Success Criteria
 
