@@ -12,7 +12,7 @@ from uuid import UUID
 from sqlalchemy import Connection, text
 
 from src import db
-from src.contracts.mapped_skill import MappedRoleSkillRow
+from src.contracts.mapped_skill import MappedRoleSkillRow, MappedSkillItem
 from src.contracts.normalized_job_posting import NormalizedJobPosting, normalize_job_posting
 from src.contracts.sdi_snapshot import SdiSnapshotPublishRow
 from src.contracts.skill_decay_signal import SkillDecaySignalPublishRow
@@ -181,9 +181,10 @@ def _run_pipeline_in_connection(*, connection: Connection, csv_path: Path, sourc
                 alias_lookup=skill_alias_lookup,
                 skill_name_lookup=skill_name_lookup,
             )
+            unique_mapped_skills = _deduplicate_mapped_skills(mapping_result.mapped)
             role_totals[role_id].add(posting_id)
-            counters.skill_matches_produced += len(mapping_result.mapped)
-            for mapped_skill in mapping_result.mapped:
+            counters.skill_matches_produced += len(unique_mapped_skills)
+            for mapped_skill in unique_mapped_skills:
                 _insert_job_posting_skill(
                     connection=connection,
                     posting_id=posting_id,
@@ -481,6 +482,17 @@ def _insert_job_posting_skill(
             "normalized_depth": normalized_depth,
         },
     )
+
+
+def _deduplicate_mapped_skills(mapped_skills: list[MappedSkillItem]) -> list[MappedSkillItem]:
+    seen_skill_ids: set[UUID] = set()
+    unique_skills: list[MappedSkillItem] = []
+    for mapped_skill in mapped_skills:
+        if mapped_skill.skill_id in seen_skill_ids:
+            continue
+        seen_skill_ids.add(mapped_skill.skill_id)
+        unique_skills.append(mapped_skill)
+    return unique_skills
 
 
 def _load_decay_input_rows(
