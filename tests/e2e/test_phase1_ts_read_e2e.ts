@@ -177,10 +177,10 @@ async function assertPreparedReads(run: PublishedRun, expectedStatus: "complete"
   for (const signal of activeDecaySignals) {
     expect(SkillDecaySignalSchema.parse(signal)).toEqual(signal);
   }
-
-  if (run.scenario === "mixed") {
-    expect(activeDecaySignals).toHaveLength(2);
-  }
+  const activeSignalsForRunVersion = activeDecaySignals.filter(
+    (signal) => signal.requirementVersion === run.outputVersion,
+  );
+  expect(activeSignalsForRunVersion).toHaveLength(2);
 }
 
 describe("Phase 1 TypeScript read-layer e2e", () => {
