@@ -144,6 +144,8 @@ The database is the single source of truth. Each domain concept has one authorit
 - `auth.users` is authoritative for identity existence and login lifecycle.
 - `users` mirrors app-specific role and status metadata and must never diverge from `auth.users.id`.
 - Admin-maintained reference data includes `skills`, `career_roles`, `courses`, `course_skills`, and `recommendation_catalog`.
+- `skill_aliases` review state is derived from `reviewed` plus `skill_id`: pending aliases are unreviewed, approved aliases are reviewed with a skill, and dismissed aliases are reviewed without a skill.
+- `career_role_aliases.reviewed` records whether a role alias has been admin-confirmed.
 - Python owns versioned market-intelligence outputs and never writes student-owned tables.
 - TypeScript owns student-owned tables and never writes market-intelligence output tables except job bookkeeping tables.
 - Immutable versioned outputs are never updated in place except to flip month-scoped current-version pointers or status flags.
@@ -425,6 +427,7 @@ Cross-screen transient UI state may use Zustand.
 - `required_depth` is normalized to the range `0.0` to `1.0`.
 - `demand_weight` is normalized to the range `0.1` to `1.0`.
 - A role-skill pair is published only when evidence count is at least `5`.
+- Below-threshold role-skill evidence is available through `pipeline_skill_evidence_summary`, not `role_skill_requirements`.
 - Re-publishing a month creates a new global `version` and increments `period_revision`; it only flips the current pointer for that same `period_month`.
 - Current monthly read surfaces resolve through `role_requirement_versions.is_current = true` and preserve historical versions for month, revision, version, and dataset-lineage queries.
 
@@ -451,6 +454,8 @@ A skill is marked as decaying for a role when:
 - at least 3 snapshots exist,
 - the rolling SDI slope is below `-0.10`,
 - and confidence is at least `0.70`.
+
+`skill_decay_signals.decay_rate` stores the signed rolling SDI slope in `[-1.0, 0.0]`; negative values indicate decline and `0.0` means no decline magnitude.
 
 `skill_decay_signals.is_active` means active for the signal's `period_month`, not globally active across all months.
 

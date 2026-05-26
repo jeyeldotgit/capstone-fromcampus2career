@@ -806,6 +806,12 @@ skill_aliases
 - created_at timestamptz not null
 ```
 
+Skill alias review state is derived:
+
+- pending: `reviewed = false`, `skill_id = null`
+- approved: `reviewed = true`, `skill_id is not null`
+- dismissed: `reviewed = true`, `skill_id = null`
+
 ```txt
 course_skills
 - id uuid primary key
@@ -813,7 +819,10 @@ course_skills
 - skill_id uuid not null references skills(id)
 - depth_weight numeric(3,2) not null default 1.0
 - unique(course_id, skill_id)
+- check(depth_weight > 0 and depth_weight <= 1)
 ```
+
+Admin mapping APIs expose depth as `0.01..1.00`.
 
 ### Career and Market Tables
 
@@ -835,6 +844,7 @@ career_role_aliases
 - role_id uuid not null references career_roles(id)
 - alias text unique not null
 - normalized_alias text not null
+- reviewed boolean not null default true
 - created_at timestamptz not null
 ```
 
@@ -843,6 +853,7 @@ market_datasets
 - id uuid primary key
 - file_path text not null
 - source text
+- source_url text
 - status text not null
 - uploaded_by uuid references users(id)
 - created_at timestamptz not null
@@ -951,6 +962,8 @@ skill_decay_signals
 - detected_at timestamptz not null
 - requirement_version int not null references role_requirement_versions(version)
 - is_active boolean default true
+- check(decay_rate >= -1 and decay_rate <= 0)
+- check(confidence >= 0 and confidence <= 1)
 ```
 
 ### Analysis and Roadmap Tables
@@ -1107,7 +1120,7 @@ role_requirement_version
 created_at
 ```
 
-`admin_pipeline_job_summary` may read `pipeline_skill_evidence_summary` by `pipeline_job_id` to show role-skill evidence counts and threshold status for each completed or partial pipeline run.
+`admin_pipeline_job_summary` may read `pipeline_skill_evidence_summary` by `pipeline_job_id` to show role-skill evidence counts and threshold status for each completed or partial pipeline run. Below-threshold evidence remains in this evidence-summary surface and is not published into `role_skill_requirements`.
 
 Materialized views should be refreshed after pipeline publication or relevant student profile changes.
 

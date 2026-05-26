@@ -55,7 +55,7 @@ Expected checkpoint assertions:
 
 8. `skill_decay_signals`
    Valid run: exactly `2` rows for the valid output version; they become inactive after the mixed publish.
-   Mixed run: exactly `2` rows for the mixed output version, each active with `decay_rate` and `confidence` in `[0.0, 1.0]`.
+   Mixed run: exactly `2` rows for the mixed output version, each active with `decay_rate` in `[-1.0, 0.0]` and `confidence` in `[0.0, 1.0]`.
 
 ## TypeScript Read Verification
 
