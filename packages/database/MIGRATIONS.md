@@ -302,3 +302,17 @@ Before applying any migration to live/shared DB:
   - `pipeline_jobs` keeps ingestion lifecycle states: `pending`, `running`, `complete`, `failed`, `partial`
 - Safe apply rule:
   - apply after P1-S02 so pipeline operational schema exists before dependent event-emission work is added
+
+## P1-S16 Admin Readiness Contract Patch Migration Note
+
+- Migration file: `packages/database/migrations/20260526120000_admin_readiness_contract_patch.sql`
+- Depends on: `20260523120000_monthly_versioning_and_lineage.sql`
+- Adds:
+  - `career_role_aliases.reviewed` for admin-confirmed role alias state
+  - `market_datasets.source_url` for optional dataset provenance metadata
+- Changes:
+  - drops `skill_aliases_reviewed_requires_skill_id_chk` so reviewed aliases can be dismissed without a canonical skill
+  - converts existing positive `skill_decay_signals.decay_rate` values to signed negative slopes
+  - replaces the decay-rate range check with `decay_rate >= -1 and decay_rate <= 0`
+- Safe apply rule:
+  - apply after P1-S15 because the patch expects versioned prepared-intelligence tables to exist

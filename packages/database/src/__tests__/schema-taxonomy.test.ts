@@ -60,7 +60,6 @@ const REQUIRED_CONSTRAINTS = [
   "skill_aliases_alias_non_empty_chk",
   "skill_aliases_normalized_alias_non_empty_chk",
   "skill_aliases_normalized_alias_consistency_chk",
-  "skill_aliases_reviewed_requires_skill_id_chk",
   "career_role_aliases_role_id_fkey",
   "career_role_aliases_alias_unique",
   "career_role_aliases_normalized_alias_unique",

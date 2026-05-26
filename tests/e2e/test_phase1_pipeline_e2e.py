@@ -1138,7 +1138,7 @@ def _assert_decay_signals(
     for row in rows:
         decay_rate = float(row["decay_rate"])
         confidence = float(row["confidence"])
-        assert 0.0 <= decay_rate <= 1.0, (
+        assert -1.0 <= decay_rate <= 0.0, (
             f"skill_decay_signals.decay_rate out of range for version={requirement_version}, "
             f"role_id={row['role_id']}, skill_id={row['skill_id']}: actual={decay_rate}"
         )

@@ -60,7 +60,7 @@ def test_deterministic_decay_fixture_publishes_active_signal_in_rollback_mode(co
     assert len(signals) == 1
     assert signals[0].role_id == ROLE_ID
     assert signals[0].skill_id == SKILL_ID
-    assert signals[0].decay_rate == 0.25
+    assert signals[0].decay_rate == -0.25
     assert signals[0].confidence >= 0.70
 
     latest_version = versions[-1]
@@ -261,6 +261,8 @@ def _bootstrap_schema(engine: Engine) -> None:
             _run_migration(connection, "20260518120000_align_role_requirement_publish_contract.sql")
         if not _column_exists(connection, "role_requirement_versions", "period_month"):
             _run_migration(connection, "20260523120000_monthly_versioning_and_lineage.sql")
+        if not _column_exists(connection, "market_datasets", "source_url"):
+            _run_migration(connection, "20260526120000_admin_readiness_contract_patch.sql")
 
 
 def _run_migration(connection: Connection, migration_name: str) -> None:

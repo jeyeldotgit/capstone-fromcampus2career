@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   check,
   index,
   pgTable,
@@ -20,6 +21,7 @@ export const careerRoleAliases = pgTable(
       .references(() => careerRoles.id),
     alias: text("alias").notNull(),
     normalizedAlias: text("normalized_alias").notNull(),
+    reviewed: boolean("reviewed").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [

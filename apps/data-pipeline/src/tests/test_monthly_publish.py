@@ -178,12 +178,12 @@ def test_decay_deactivation_is_scoped_to_period_month(connection: Connection) ->
 
     publish_decay_signals(
         requirement_version=jan_v1,
-        rows=[_decay_row(role_id, skill_id, jan_v1, 0.2)],
+        rows=[_decay_row(role_id, skill_id, jan_v1, -0.2)],
         connection=connection,
     )
     publish_decay_signals(
         requirement_version=feb_v1,
-        rows=[_decay_row(role_id, skill_id, feb_v1, 0.3)],
+        rows=[_decay_row(role_id, skill_id, feb_v1, -0.3)],
         connection=connection,
     )
     publish_decay_signals(
@@ -256,6 +256,8 @@ def _bootstrap_schema(engine: Engine) -> None:
             _run_migration(connection, "20260519120000_add_job_posting_skill_evidence.sql")
         if not _column_exists(connection, "role_requirement_versions", "period_month"):
             _run_migration(connection, "20260523120000_monthly_versioning_and_lineage.sql")
+        if not _column_exists(connection, "market_datasets", "source_url"):
+            _run_migration(connection, "20260526120000_admin_readiness_contract_patch.sql")
 
 
 def _run_migration(connection: Connection, migration_name: str) -> None:

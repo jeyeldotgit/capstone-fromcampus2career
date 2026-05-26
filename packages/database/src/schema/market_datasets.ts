@@ -7,6 +7,7 @@ export const marketDatasets = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     filePath: text("file_path").notNull(),
     source: text("source"),
+    sourceUrl: text("source_url"),
     status: text("status").notNull(),
     uploadedBy: uuid("uploaded_by"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -18,6 +19,10 @@ export const marketDatasets = pgTable(
     check(
       "market_datasets_source_non_empty_when_present_chk",
       sql`${table.source} is null or char_length(btrim(${table.source})) > 0`,
+    ),
+    check(
+      "market_datasets_source_url_non_empty_when_present_chk",
+      sql`${table.sourceUrl} is null or char_length(btrim(${table.sourceUrl})) > 0`,
     ),
   ],
 );

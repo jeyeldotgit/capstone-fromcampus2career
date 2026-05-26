@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, field_validator
 class SkillDecaySignalPublishRow(BaseModel):
     role_id: UUID
     skill_id: UUID
-    decay_rate: float = Field(ge=0.0, le=1.0)
+    decay_rate: float = Field(ge=-1.0, le=0.0)
     confidence: float = Field(ge=0.0, le=1.0)
     detected_at: datetime
     requirement_version: int = Field(gt=0)

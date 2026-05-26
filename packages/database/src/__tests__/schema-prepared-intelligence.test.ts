@@ -102,6 +102,11 @@ const MONTHLY_VERSIONING_MIGRATION_SQL = readFileSync(
   "utf8",
 );
 
+const ADMIN_READINESS_MIGRATION_SQL = readFileSync(
+  new URL("../../migrations/20260526120000_admin_readiness_contract_patch.sql", import.meta.url),
+  "utf8",
+);
+
 function runSql(sqlText: string): string {
   assert.ok(DATABASE_URL, "DATABASE_URL must be provided to run prepared intelligence schema tests");
   if (USE_DOCKER_PSQL) {
@@ -265,6 +270,10 @@ suite("P1-S03 prepared intelligence schema migration", () => {
 
     if (!columnExists("role_requirement_versions", "period_month")) {
       runSql(MONTHLY_VERSIONING_MIGRATION_SQL);
+    }
+
+    if (!columnExists("market_datasets", "source_url")) {
+      runSql(ADMIN_READINESS_MIGRATION_SQL);
     }
   });
 
@@ -607,7 +616,7 @@ suite("P1-S03 prepared intelligence schema migration", () => {
       values (
         '${roleId}'::uuid,
         '${skillId}'::uuid,
-        0.3,
+        -0.3,
         0.8,
         ${requirementVersion},
         true
@@ -618,21 +627,28 @@ suite("P1-S03 prepared intelligence schema migration", () => {
     expect(insertedId).toMatch(/[0-9a-f-]{36}/i);
   });
 
-  test("rejects skill_decay_signals decay_rate and confidence outside the 0.0 to 1.0 range", () => {
+  test("rejects skill_decay_signals decay_rate outside the -1.0 to 0.0 range and invalid confidence", () => {
     const roleId = insertRole();
     const skillId = insertSkill();
     const requirementVersion = insertRequirementVersion();
 
-    const invalidDecayRate = runSqlExpectFailure(`
+    const invalidPositiveDecayRate = runSqlExpectFailure(`
       insert into skill_decay_signals (role_id, skill_id, decay_rate, confidence, requirement_version)
-      values ('${roleId}'::uuid, '${skillId}'::uuid, -0.0001, 0.8, ${requirementVersion});
+      values ('${roleId}'::uuid, '${skillId}'::uuid, 0.0001, 0.8, ${requirementVersion});
     `);
-    expect(invalidDecayRate.status).not.toBe(0);
-    expect(`${invalidDecayRate.stderr}\n${invalidDecayRate.stdout}`).toMatch(/check constraint/i);
+    expect(invalidPositiveDecayRate.status).not.toBe(0);
+    expect(`${invalidPositiveDecayRate.stderr}\n${invalidPositiveDecayRate.stdout}`).toMatch(/check constraint/i);
+
+    const invalidBelowMinimumDecayRate = runSqlExpectFailure(`
+      insert into skill_decay_signals (role_id, skill_id, decay_rate, confidence, requirement_version)
+      values ('${roleId}'::uuid, '${skillId}'::uuid, -1.0001, 0.8, ${requirementVersion});
+    `);
+    expect(invalidBelowMinimumDecayRate.status).not.toBe(0);
+    expect(`${invalidBelowMinimumDecayRate.stderr}\n${invalidBelowMinimumDecayRate.stdout}`).toMatch(/check constraint/i);
 
     const invalidConfidence = runSqlExpectFailure(`
       insert into skill_decay_signals (role_id, skill_id, decay_rate, confidence, requirement_version)
-      values ('${roleId}'::uuid, '${skillId}'::uuid, 0.2, 1.0001, ${requirementVersion});
+      values ('${roleId}'::uuid, '${skillId}'::uuid, -0.2, 1.0001, ${requirementVersion});
     `);
     expect(invalidConfidence.status).not.toBe(0);
     expect(`${invalidConfidence.stderr}\n${invalidConfidence.stdout}`).toMatch(/check constraint/i);

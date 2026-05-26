@@ -155,7 +155,7 @@ def test_decay_detection_thresholds() -> None:
     )
 
     assert len(signals) == 1
-    assert signals[0].decay_rate == 0.25
+    assert signals[0].decay_rate == -0.25
     assert signals[0].confidence == 1.0
 
 
@@ -169,7 +169,7 @@ def test_decay_publish_deactivates_prior_active_rows(connection: Connection) -> 
             SkillDecaySignalPublishRow(
                 role_id=seed.role_id,
                 skill_id=seed.skill_ids[0],
-                decay_rate=0.25,
+                decay_rate=-0.25,
                 confidence=0.9,
                 detected_at=datetime(2026, 5, 19, tzinfo=timezone.utc),
                 requirement_version=seed.requirement_version,
@@ -189,7 +189,7 @@ def test_decay_publish_deactivates_prior_active_rows(connection: Connection) -> 
             SkillDecaySignalPublishRow(
                 role_id=seed.role_id,
                 skill_id=seed.skill_ids[0],
-                decay_rate=0.3,
+                decay_rate=-0.3,
                 confidence=1.0,
                 detected_at=datetime(2026, 5, 20, tzinfo=timezone.utc),
                 requirement_version=second_version,
@@ -303,7 +303,7 @@ def test_decay_detection_returns_active_signal_when_thresholds_are_met() -> None
     )
 
     assert len(signals) == 1
-    assert signals[0].decay_rate == 0.25
+    assert signals[0].decay_rate == -0.25
     assert signals[0].confidence == 1.0
 
 
@@ -315,7 +315,7 @@ def test_all_published_decay_rows_have_valid_requirement_version(connection: Con
             SkillDecaySignalPublishRow(
                 role_id=seed.role_id,
                 skill_id=seed.skill_ids[0],
-                decay_rate=0.25,
+                decay_rate=-0.25,
                 confidence=0.9,
                 detected_at=datetime(2026, 5, 19, tzinfo=timezone.utc),
                 requirement_version=seed.requirement_version,
@@ -349,7 +349,7 @@ def test_publish_entrypoints_return_non_null_output_version(connection: Connecti
             SkillDecaySignalPublishRow(
                 role_id=seed.role_id,
                 skill_id=seed.skill_ids[0],
-                decay_rate=0.25,
+                decay_rate=-0.25,
                 confidence=0.9,
                 detected_at=datetime(2026, 5, 19, tzinfo=timezone.utc),
                 requirement_version=seed.requirement_version,
@@ -387,7 +387,7 @@ def test_publish_paths_do_not_write_pipeline_jobs_or_app_events(connection: Conn
             SkillDecaySignalPublishRow(
                 role_id=seed.role_id,
                 skill_id=seed.skill_ids[0],
-                decay_rate=0.25,
+                decay_rate=-0.25,
                 confidence=0.9,
                 detected_at=datetime(2026, 5, 19, tzinfo=timezone.utc),
                 requirement_version=seed.requirement_version,
@@ -429,6 +429,8 @@ def _bootstrap_schema(engine: Engine) -> None:
             _run_migration(connection, "20260518120000_align_role_requirement_publish_contract.sql")
         if not _column_exists(connection, "role_requirement_versions", "period_month"):
             _run_migration(connection, "20260523120000_monthly_versioning_and_lineage.sql")
+        if not _column_exists(connection, "market_datasets", "source_url"):
+            _run_migration(connection, "20260526120000_admin_readiness_contract_patch.sql")
         if not _table_exists(connection, "job_postings"):
             _run_migration(connection, "20260519120000_add_job_posting_skill_evidence.sql")
 
@@ -804,7 +806,7 @@ def _all_decay_values_in_range(connection: Connection) -> bool:
         connection.execute(
             text(
                 """
-                select bool_and(decay_rate >= 0 and decay_rate <= 1 and confidence >= 0 and confidence <= 1)
+                select bool_and(decay_rate >= -1 and decay_rate <= 0 and confidence >= 0 and confidence <= 1)
                 from skill_decay_signals
                 """
             )

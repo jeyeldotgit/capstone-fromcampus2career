@@ -38,10 +38,6 @@ export const skillAliases = pgTable(
       "skill_aliases_normalized_alias_consistency_chk",
       sql`${table.normalizedAlias} = lower(regexp_replace(btrim(${table.alias}), '[[:space:]]+', ' ', 'g'))`,
     ),
-    check(
-      "skill_aliases_reviewed_requires_skill_id_chk",
-      sql`(not ${table.reviewed}) or ${table.skillId} is not null`,
-    ),
   ],
 );
 

@@ -25,7 +25,7 @@ class HistoricalSdiSnapshotRow(BaseModel):
 class DecaySignalComputationRow(BaseModel):
     role_id: UUID
     skill_id: UUID
-    decay_rate: float = Field(ge=0.0, le=1.0)
+    decay_rate: float = Field(ge=-1.0, le=0.0)
     confidence: float = Field(ge=0.0, le=1.0)
     requirement_version: int = Field(gt=0)
 
@@ -84,7 +84,7 @@ def detect_decay_signals(
             DecaySignalComputationRow(
                 role_id=UUID(str(pair["role_id"])),
                 skill_id=UUID(str(pair["skill_id"])),
-                decay_rate=_round(abs(slope)),
+                decay_rate=_round_signed_slope(slope),
                 confidence=_round(confidence),
                 requirement_version=int(latest_row["requirement_version"]),
             )
@@ -113,3 +113,7 @@ def _clip(value: float) -> float:
 
 def _round(value: float) -> float:
     return round(_clip(value), PERSISTED_PRECISION)
+
+
+def _round_signed_slope(value: float) -> float:
+    return round(min(max(value, -1.0), 0.0), PERSISTED_PRECISION)

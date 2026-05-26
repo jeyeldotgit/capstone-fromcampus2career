@@ -38,6 +38,7 @@ const MIGRATIONS = [
   "20260504110000_p1_s03_prepared_intelligence.sql",
   "20260518120000_align_role_requirement_publish_contract.sql",
   "20260523120000_monthly_versioning_and_lineage.sql",
+  "20260526120000_admin_readiness_contract_patch.sql",
 ] as const;
 
 function migrationSql(name: string): string {
@@ -191,6 +192,9 @@ suite("P1-S15 monthly intelligence versioning schema", () => {
     if (!columnExists("role_requirement_versions", "period_month")) {
       runSql(migrationSql("20260523120000_monthly_versioning_and_lineage.sql"));
     }
+    if (!columnExists("market_datasets", "source_url")) {
+      runSql(migrationSql("20260526120000_admin_readiness_contract_patch.sql"));
+    }
   });
 
   test("enforces month-start periods, positive revisions, and one current row per month", () => {
@@ -275,8 +279,8 @@ suite("P1-S15 monthly intelligence versioning schema", () => {
         ('${roleId}'::uuid, '${skillId}'::uuid, 0.8000, date '2026-08-01', ${currentVersion});
       insert into skill_decay_signals (role_id, skill_id, decay_rate, confidence, requirement_version, is_active)
       values
-        ('${roleId}'::uuid, '${skillId}'::uuid, 0.1000, 0.8000, ${oldVersion}, false),
-        ('${roleId}'::uuid, '${skillId}'::uuid, 0.2000, 0.9000, ${currentVersion}, true);
+        ('${roleId}'::uuid, '${skillId}'::uuid, -0.1000, 0.8000, ${oldVersion}, false),
+        ('${roleId}'::uuid, '${skillId}'::uuid, -0.2000, 0.9000, ${currentVersion}, true);
     `);
 
     expect(Number(runSql(`select count(*) from v_current_monthly_role_skill_requirements where requirement_version = ${currentVersion};`))).toBe(1);
