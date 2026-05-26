@@ -45,7 +45,7 @@ export const skillDecaySignals = pgTable(
       foreignColumns: [roleRequirementVersions.version],
       name: "skill_decay_signals_requirement_version_fkey",
     }),
-    check("skill_decay_signals_decay_rate_range_chk", sql`${table.decayRate} >= 0 and ${table.decayRate} <= 1`),
+    check("skill_decay_signals_decay_rate_range_chk", sql`${table.decayRate} >= -1 and ${table.decayRate} <= 0`),
     check("skill_decay_signals_confidence_range_chk", sql`${table.confidence} >= 0 and ${table.confidence} <= 1`),
   ],
 );
