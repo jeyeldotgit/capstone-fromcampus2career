@@ -62,7 +62,7 @@ export const SkillDecaySignalSchema = z.object({
   id: PostgresUuidSchema,
   roleId: PostgresUuidSchema,
   skillId: PostgresUuidSchema,
-  decayRate: z.number().finite(),
+  decayRate: z.number().min(-1).max(0),
   confidence: z.number().min(0).max(1),
   detectedAt: IsoDateTimeSchema,
   requirementVersion: z.number().int().positive(),

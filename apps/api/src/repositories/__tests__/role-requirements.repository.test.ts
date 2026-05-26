@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { afterAll, describe, expect, test } from "vitest";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import {
   careerRoles,
   marketDatasets,
@@ -19,6 +19,7 @@ import {
 } from "../role-requirements.repository.js";
 import { __testing as decayTesting } from "../decay.repository.js";
 import { __testing as sdiTesting } from "../sdi.repository.js";
+import { applyAdminReadinessContractPatchIfNeeded } from "./admin-readiness-test-db.js";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const client = DATABASE_URL === undefined ? null : postgres(DATABASE_URL, { max: 1 });
@@ -27,6 +28,10 @@ const suite = db === null ? describe.skip : describe;
 let testVersion = 1_800_000_000;
 
 class RollbackTransaction extends Error {}
+
+beforeAll(async () => {
+  await applyAdminReadinessContractPatchIfNeeded(client);
+});
 
 type TestDatabase = NonNullable<typeof db>;
 type TestTransaction = Parameters<Parameters<TestDatabase["transaction"]>[0]>[0];

@@ -1,10 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { afterAll, describe, expect, test } from "vitest";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { careerRoles, marketDatasets, roleRequirementVersions, skillDecaySignals, skills } from "@fcc/database";
 import { SkillDecaySignalSchema } from "@fcc/shared";
 import { __testing, getActiveDecaySignalsByRole } from "../decay.repository.js";
+import { applyAdminReadinessContractPatchIfNeeded } from "./admin-readiness-test-db.js";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const client = DATABASE_URL === undefined ? null : postgres(DATABASE_URL, { max: 1 });
@@ -13,6 +14,10 @@ const suite = db === null ? describe.skip : describe;
 let testVersion = 1_820_000_000;
 
 class RollbackTransaction extends Error {}
+
+beforeAll(async () => {
+  await applyAdminReadinessContractPatchIfNeeded(client);
+});
 
 type TestDatabase = NonNullable<typeof db>;
 type TestTransaction = Parameters<Parameters<TestDatabase["transaction"]>[0]>[0];
@@ -108,7 +113,7 @@ suite("decay repository", () => {
         {
           roleId,
           skillId,
-          decayRate: "0.2500",
+          decayRate: "-0.2500",
           confidence: "0.9000",
           requirementVersion: firstVersion,
           isActive: true,
@@ -116,7 +121,7 @@ suite("decay repository", () => {
         {
           roleId,
           skillId: inactiveSkillId,
-          decayRate: "0.3000",
+          decayRate: "-0.3000",
           confidence: "0.8000",
           requirementVersion: secondVersion,
           isActive: false,
@@ -129,7 +134,7 @@ suite("decay repository", () => {
       expect(rows[0]).toMatchObject({
         roleId,
         skillId,
-        decayRate: 0.25,
+        decayRate: -0.25,
         confidence: 0.9,
         requirementVersion: firstVersion,
         isActive: true,
@@ -146,7 +151,7 @@ suite("decay repository", () => {
       await tx.insert(skillDecaySignals).values({
         roleId,
         skillId,
-        decayRate: "0.1000",
+        decayRate: "-0.1000",
         confidence: "1.0000",
         requirementVersion: version,
         isActive: true,
@@ -164,7 +169,7 @@ suite("decay repository", () => {
         id: randomUUID(),
         roleId: randomUUID(),
         skillId: randomUUID(),
-        decayRate: "2.5000",
+        decayRate: "-0.2500",
         confidence: "1.0001",
         detectedAt: new Date(),
         requirementVersion: 1,
