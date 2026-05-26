@@ -137,7 +137,7 @@ def test_phase1_pipeline_e2e_complete_and_partial_paths(engine: Engine) -> None:
             connection=connection,
             dataset_id=valid_outcome.dataset_id,
             expected_version=valid_outcome.output_version,
-            expected_is_current=False,
+            expected_is_current=True,
         )
         _assert_requirement_version_for_dataset(
             connection=connection,
@@ -185,7 +185,7 @@ def test_phase1_pipeline_e2e_complete_and_partial_paths(engine: Engine) -> None:
             connection=connection,
             requirement_version=valid_outcome.output_version,
             expected_row_count=2,
-            expected_is_active=False,
+            expected_is_active=True,
         )
         _assert_decay_signals(
             connection=connection,
@@ -314,6 +314,7 @@ def _build_pipeline_callback(
             output_version = publish_role_requirements(
                 dataset_id=dataset_id,
                 requirements=aggregates,
+                period_month=snapshot_date,
                 connection=connection,
             )
 
@@ -561,7 +562,7 @@ def _seed_historical_snapshots(
                     :snapshot_date,
                     :requirement_version
                 )
-                on conflict (role_id, skill_id, snapshot_date) do nothing
+                on conflict (role_id, skill_id, snapshot_date, requirement_version) do nothing
                 """
             ),
             {
@@ -588,7 +589,7 @@ def _seed_historical_snapshots(
                     :snapshot_date,
                     :requirement_version
                 )
-                on conflict (role_id, skill_id, snapshot_date) do nothing
+                on conflict (role_id, skill_id, snapshot_date, requirement_version) do nothing
                 """
             ),
             {
@@ -754,6 +755,15 @@ def _cleanup_previous_artifacts(
                     text(
                         """
                         delete from role_skill_requirements
+                        where requirement_version = :requirement_version
+                        """
+                    ),
+                    {"requirement_version": version},
+                )
+                connection.execute(
+                    text(
+                        """
+                        delete from role_requirement_version_datasets
                         where requirement_version = :requirement_version
                         """
                     ),
